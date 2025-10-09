@@ -7,7 +7,7 @@ import javax.swing.border.Border;
 public class Game2048 {
     
     public Game2048() {
-        Board gridGrame = new Board();
+        Board gridGrame = new Board(); //change
     }
 
     public static void main(String[] args) {
