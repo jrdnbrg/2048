@@ -6,9 +6,6 @@ import javax.swing.border.Border;
 
 import Temp.Board;
 
-
-
-
 public class Game2048 {
     
     public Game2048() {
