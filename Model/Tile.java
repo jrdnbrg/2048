@@ -8,10 +8,9 @@ public class Tile {
     private boolean merged; //to check if the tile is merged or no
 
     //constructor
-    public Tile(int value) {
+    public Tile(String id) {
         this.value = 0; 
-        //this.id = UUID.randomUUID().toString(); //to create unique id and and to convrt it into
-        // string 
+        this.id = id;
         this.merged = false; //initially tiles are not merged
     }
 
@@ -35,6 +34,10 @@ public class Tile {
     //to return the current value
     int getValue() {
         return value;
+    }
+
+    String getId() {
+        return id;
     }
 
     boolean isMerged() {

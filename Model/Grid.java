@@ -1,5 +1,6 @@
 package Model;
 
+import java.awt.*;
 import java.util.*;
 
 /**
@@ -10,6 +11,7 @@ public class Grid {
     private Random random;
     private Tile[][] tileArray;
     private int score;
+    private Tile randomTile;
 
     /**
      * Constructor.
@@ -25,9 +27,11 @@ public class Grid {
      * Initialize the grid.
      */
     public void initialize() {
+        String id;
         for (int r = 0; r < GRID_SIZE; r++) {
             for (int c = 0; c < GRID_SIZE; c++) {
-                Tile tile = new Tile(0);
+                id = UUID.randomUUID().toString();
+                Tile tile = new Tile(UUID.randomUUID().toString());
                 tileArray[r][c] = tile;
             }
         }
@@ -67,16 +71,25 @@ public class Grid {
      */
     public void spawnRandomTile() {
         var emptyTiles = getEmptyTiles();
-        emptyTiles.get(random.nextInt(emptyTiles.size())).setValue(2);
+        Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
+        randomTile.setValue(2);
+        this.randomTile = randomTile;
     }
 
     /**
-     * Check if the user can make another move.
-     * @return whether the user can make another move
+     * Get the position of a tile in the grid.
+     * @param tile to check the position of
+     * @return point with the row and column index of the tile
      */
-    public boolean canMove() {
-        // Implement !!!!!!!!!!!!!!!!!!!!!!!!
-        return true;
+    public Point getGridPosition(Tile tile) {
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                if (tile.getId().equals(tileArray[r][c].getId())) {
+                    return new Point(r, c);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -158,6 +171,19 @@ public class Grid {
                 movePlan.addScore(newValue);
             }
         }
+
+        // Check if the move changed anything in the grid
+        if (movePlan.isChanged()) {
+            // Spawn a random tile
+            gridCopy.spawnRandomTile();
+
+            // Add the spawn to the MovePlan
+            int row = (int) getGridPosition(randomTile).getX();
+            int col = (int) getGridPosition(randomTile).getY();
+            var spawn = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
+            movePlan.addAction(spawn);
+        }
+
         return movePlan;
     }
 
@@ -172,11 +198,22 @@ public class Grid {
 
         score += movePlan.getScoreGained();
 
-        List<MoveAction> actions = movePlan.getActions();
+        ArrayList<MoveAction> actions = movePlan.getActions();
         for (MoveAction action : actions) {
             tileArray[action.getStartRow()][action.getStartCol()].setValue(0); 
             tileArray[action.getEndRow()][action.getEndCol()].setValue(action.getNewValue());
         }
+
+        System.out.println(movePlan);
+    }
+
+    /**
+     * Check if the user can make another move.
+     * @return whether the user can make another move
+     */
+    public boolean canMove() {
+        // Implement !!!!!!!!!!!!!!!!!!!!!!!!
+        return true;
     }
     
     // For testing purposes
@@ -194,13 +231,16 @@ public class Grid {
 
     public static void main(String[] args) {
         var grid = new Grid();
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.RIGHT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.DOWN));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.LEFT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.UP));  
+        for (int i = 0; i < 1; i++) {       
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.RIGHT));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.DOWN));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.LEFT));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.UP)); 
+        }
+         
     }
 }
