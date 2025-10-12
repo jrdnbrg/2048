@@ -38,7 +38,7 @@ public class Tile {
     }
 
     boolean isMerged() {
-        return true;
+        return merged;
     }
 
     void setMerged(boolean merged){

@@ -7,6 +7,7 @@ import java.util.*;
  */
 public class Grid {
     private static final int GRID_SIZE = 4;
+    private Random random;
     private Tile[][] tileArray;
     private int score;
 
@@ -14,6 +15,7 @@ public class Grid {
      * Constructor.
      */
     Grid() {
+        random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
         initialize();
@@ -65,7 +67,6 @@ public class Grid {
      */
     public void spawnRandomTile() {
         var emptyTiles = getEmptyTiles();
-        var random = new Random(); 
         emptyTiles.get(random.nextInt(emptyTiles.size())).setValue(2);
     }
 
@@ -79,190 +80,91 @@ public class Grid {
     }
 
     /**
-     * See what would happen by doing a certain move.
+     * See what would happen by doing a certain move without changing the grid.
      * @param direction of move
      * @return MovePlan containing MoveActions
      */
     public MovePlan computeMove(Direction dir) {
-        MovePlan movePlan = switch (dir) {
-            case LEFT -> computeLeftMove();
-            case RIGHT -> computeRightMove();
-            case UP -> computeUpMove();
-            case DOWN -> computeDownMove();
-            default -> computeDownMove();
-        };
-        return movePlan;
-    }
-
-    /**
-     * See what would happen by doing a move to the left.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeLeftMove() {
-        boolean merged = false;
-        int endCol;
+        int nextRow;
+        int nextCol;
+        int newRow;
+        int newCol;
+        int oldValue;
         int newValue;
-        int i;
         String type;
-        var movePlan = new MovePlan(Direction.LEFT);
 
-        for (int startRow = 0; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = 1; startCol < GRID_SIZE; startCol++) {
-                if (tileArray[startRow][startCol].isEmpty()) {
+        // Make copy of current grid
+        var gridCopy = this;
+        Tile[][] tileArray = gridCopy.getTileArray();
+        MovePlan movePlan = new MovePlan(dir);
+
+        // Compute row and column values used in the upcoming loop depending on direction
+        int rowChange = (dir == Direction.UP) ? -1 : (dir == Direction.DOWN) ? 1 : 0;
+        int colChange = (dir == Direction.LEFT) ? -1 : (dir == Direction.RIGHT) ? 1 : 0;
+        int rowStep = (dir == Direction.DOWN) ? -1 : 1;
+        int colStep = (dir == Direction.RIGHT) ? -1 : 1;
+        int startRow = (dir == Direction.UP) ? 1 : (dir == Direction.DOWN) ? GRID_SIZE - 2 : 0;
+        int startCol = (dir == Direction.LEFT) ? 1 : (dir == Direction.RIGHT) ? GRID_SIZE - 2 : 0;
+
+        // Loop over all tiles in the grid
+        for (int r = startRow; r >= 0 && r < GRID_SIZE; r += rowStep) {
+            for (int c = startCol; c >= 0 && c < GRID_SIZE; c += colStep) {
+
+                // If tile is empty, continue to the next tile
+                if (tileArray[r][c].isEmpty()) {
                     continue;
                 }
-                
-                endCol = startCol;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startCol - 1;
-                while (i >= 0) {
-                    if (tileArray[startRow][i].isEmpty()) {
-                        endCol = i;
-                    } else if (tileArray[startRow][i].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endCol = i;
-                    }
-                    i--;
-                }
-                type = merged ? "merge" : "slide";
 
-                var moveAction = new MoveAction(startRow, startCol, startRow, endCol, tileArray[startRow][startCol].getValue(), newValue, type);
+                oldValue = tileArray[r][c].getValue();
+                newValue = oldValue;
+                nextRow = r + rowChange;
+                nextCol = c + colChange; 
+                newRow = nextRow;
+                newCol = nextCol;
+
+                // Loop over all values in the row/column before the current value
+                while (nextRow >= 0 && nextRow < GRID_SIZE && nextCol >= 0 && nextCol < GRID_SIZE) {
+
+                    // Check if next tile is empty or has the same value as the current tile
+                    if (tileArray[nextRow][nextCol].isEmpty()) {
+                        // Move the current tile to the position of this next tile
+                        newRow = nextRow;
+                        newCol = nextCol;
+                    } else if (tileArray[nextRow][nextCol].getValue() == tileArray[r][c].getValue() && !tileArray[nextRow][nextCol].isMerged()) {
+                        // Move the current tile to the position of this next tile
+                        newRow = nextRow;
+                        newCol = nextCol;
+
+                        // Merge the tiles
+                        newValue = oldValue * 2;
+                        tileArray[newRow][newCol].setMerged(true);
+                    }
+
+                    nextRow += rowChange;
+                    nextCol += colChange;
+                }
+
+                // Update the grid
+                tileArray[newRow][newCol].setValue(newValue);
+                tileArray[r][c].reset();
+                
+                // Decide the type of the move
+                type = tileArray[newRow][newCol].isMerged() ? "merge" : "slide";
+                
+                // Add moveAction of this move to the MovePlan
+                var moveAction = new MoveAction(r, c, newRow, newCol, oldValue, newValue, type);
                 movePlan.addAction(moveAction);
                 movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
+                movePlan.addScore(newValue);
             }
         }
         return movePlan;
     }
 
     /**
-     * See what would happen by doing a move to the right.
-     * @return MovePlan containing MoveActions.
+     * Apply a move computed in computeMove to the grid.
+     * @param movePlan containing MoveActions
      */
-    public MovePlan computeRightMove() {
-        boolean merged = false;
-        int endCol;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.RIGHT); 
-
-        for (int startRow = 0; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = GRID_SIZE - 2; startCol >= 0; startCol--) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endCol = startCol;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startCol + 1; 
-                while (i <= GRID_SIZE - 1) { 
-                    if (tileArray[startRow][i].isEmpty()) {
-                        endCol = i;
-                    } else if (tileArray[startRow][i].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endCol = i;
-                    }
-                    i++; 
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, startRow, endCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
-            }
-        }
-        return movePlan;
-    }
-
-    /**
-     * See what would happen by doing an upward move.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeUpMove() {
-        boolean merged = false;
-        int endRow;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.UP); 
-
-        for (int startRow = 1; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = 0; startCol < GRID_SIZE; startCol++) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endRow = startRow;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startRow - 1;
-                while (i >= 0) {
-                    if (tileArray[i][startCol].isEmpty()) {
-                        endRow = i;
-                    } else if (tileArray[i][startCol].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endRow = i;
-                    }
-                    i--;
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, endRow, startCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
-            }
-        }
-        return movePlan;
-    }
-
-    /**
-     * See what would happen by doing a downward move.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeDownMove() {
-        boolean merged = false;
-        int endRow;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.DOWN); 
-
-        for (int startRow = GRID_SIZE - 2; startRow >= 0; startRow--) {
-            for (int startCol = 0; startCol < GRID_SIZE; startCol++) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endRow = startRow;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startRow + 1;
-                while (i < GRID_SIZE) {
-                    if (tileArray[i][startCol].isEmpty()) {
-                        endRow = i;
-                    } else if (tileArray[i][startCol].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endRow = i;
-                    }
-                    i++;
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, endRow, startCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
-            }
-        }
-        return movePlan;
-    }
-    
-
     public void applyMove(MovePlan movePlan) {
         if (!movePlan.isChanged()) {
             return;
