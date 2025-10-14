@@ -6,7 +6,7 @@ import java.util.*;
  * Represents the plan for one move.
  */
 public class MovePlan {
-    private List<MoveAction> actions;
+    private ArrayList<MoveAction> actions;
     private int scoreGained;
     private boolean changed;
     private Direction dir;
@@ -22,7 +22,7 @@ public class MovePlan {
         this.dir = dir;
     }
 
-    public List<MoveAction> getActions() {
+    public ArrayList<MoveAction> getActions() {
         return actions;
     }
 
