@@ -113,10 +113,13 @@ public class Grid {
 
         for (int r = 0; r < GRID_SIZE; r++) {
             for (int c = 0; c < GRID_SIZE; c++) {
-                tileArrayCopy[r][c] = tileArray[r][c];
+                Tile orginal = tileArray[r][c];
+                Tile copy = new Tile(orginal.getId());
+                copy.setValue(orginal.getValue());
+                copy.setMerged(orginal.isMerged());
+                tileArrayCopy[r][c] = copy;
             }
         }
-
         return tileArrayCopy;
     }
 
@@ -255,8 +258,12 @@ public class Grid {
      * @return whether the user can make another move
      */
     public boolean canMove() {
-        // Implement !!!!!!!!!!!!!!!!!!!!!!!!
-        return true;
+        for (Direction dir : Direction.values()) {
+            if (computeMove(dir).isChanged()) {
+                return true;
+            }
+        }
+        return false;
     }
     
     // For testing purposes
@@ -273,14 +280,17 @@ public class Grid {
     }
 
     public static void main(String[] args) {
-        var grid = new Grid(); 
+        var grid = new Grid();
+        grid.initialize(); 
         System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.RIGHT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.DOWN));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.LEFT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.UP)); 
+        while (grid.canMove()) {
+            grid.applyMove(grid.computeMove(Direction.RIGHT));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.DOWN));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.LEFT));
+            System.out.println(grid);
+            grid.applyMove(grid.computeMove(Direction.UP)); 
+        }
     }
 }
