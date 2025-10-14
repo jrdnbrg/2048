@@ -279,18 +279,34 @@ public class Grid {
         return str;
     }
 
+    public void testGrid() {
+        tileArray[0][0].setValue(2);
+        tileArray[0][1].setValue(4);
+        tileArray[0][2].setValue(8);
+        tileArray[0][3].setValue(16);
+
+        tileArray[1][0].setValue(32);
+        tileArray[1][1].setValue(64);
+        tileArray[1][2].setValue(128);
+        tileArray[1][3].setValue(256);
+
+        tileArray[2][0].setValue(512);
+        tileArray[2][1].setValue(1024);
+        tileArray[2][2].setValue(2048);
+        tileArray[2][3].setValue(4096);
+
+        tileArray[3][0].setValue(8192);
+        tileArray[3][1].setValue(16384);
+        tileArray[3][2].setValue(32768);
+        tileArray[3][3].setValue(65536);
+    }
+
     public static void main(String[] args) {
         var grid = new Grid();
-        grid.initialize(); 
+        grid.initialize();
+        grid.testGrid();
         System.out.println(grid);
-        while (grid.canMove()) {
-            grid.applyMove(grid.computeMove(Direction.RIGHT));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.DOWN));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.LEFT));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.UP)); 
-        }
+        grid.applyMove(grid.computeMove(Direction.LEFT));
+        System.out.println(grid);
     }
 }
