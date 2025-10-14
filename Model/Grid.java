@@ -11,7 +11,6 @@ public class Grid {
     private Random random;
     private Tile[][] tileArray;
     private int score;
-    private Tile randomTile;
 
     /**
      * Constructor.
@@ -20,14 +19,15 @@ public class Grid {
         random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
-        initialize();
     }
     
     /**
      * Initialize the grid.
      */
-    public void initialize() {
+    public MovePlan initialize() {
         String id;
+
+        // Add tiles to the grid
         for (int r = 0; r < GRID_SIZE; r++) {
             for (int c = 0; c < GRID_SIZE; c++) {
                 id = UUID.randomUUID().toString();
@@ -36,8 +36,12 @@ public class Grid {
             }
         }
 
-        spawnRandomTile();
-        spawnRandomTile();
+        // Spawn 2 random tiles
+        var movePlan = new MovePlan(null);
+        movePlan.addAction(spawnRandomTile());
+        movePlan.addAction(spawnRandomTile());
+
+        return movePlan;
     }
 
     public Tile[][] getTileArray() {
@@ -69,11 +73,19 @@ public class Grid {
     /**
      * Spawn a tile with value 2 at a random position in the grid.
      */
-    public void spawnRandomTile() {
+    public MoveAction spawnRandomTile() {
+        // Spawn a tile
         var emptyTiles = getEmptyTiles();
         Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
         randomTile.setValue(2);
-        this.randomTile = randomTile;
+
+        // Make move action for spawning a tile
+        Point position = getGridPosition(randomTile);
+        int row = (int) position.getX();
+        int col = (int) position.getY();
+        MoveAction action = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
+
+        return action;
     }
 
     /**
@@ -233,12 +245,7 @@ public class Grid {
             }
         }
 
-        spawnRandomTile();
-        Point position = getGridPosition(randomTile);
-        int row = (int) position.getX();
-        int col = (int) position.getY();
-        MoveAction action = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
-        movePlan.addAction(action);
+        movePlan.addAction(spawnRandomTile());
 
         return movePlan;
     }
