@@ -1,4 +1,4 @@
-package Temp;
+/*package Temp;
 import javax.swing.*;
 import java.awt.*;
 
@@ -28,5 +28,5 @@ public class TileLabel extends JLabel {
             setText("" + value);
         }
     }
-}
+}*/
  

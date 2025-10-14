@@ -1,304 +1,180 @@
 package Model;
 
-import java.util.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
 
-/**
- * Object that stores the grid of the game.
- */
-public class Grid {
-    private static final int GRID_SIZE = 4;
-    private Tile[][] tileArray;
-    private int score;
+public class Grid extends JFrame implements KeyListener {
+    private static final int SIZE = 4;
+    private static final int TILE_SIZE = 100;
+    private static final int GAP = 15;
+    private static final int GRID_PADDING = 20;
 
-    /**
-     * Constructor.
-     */
-    Grid() {
-        tileArray = new Tile[GRID_SIZE][GRID_SIZE];
-        score = 0;
-        initialize();
-    }
-    
-    /**
-     * Initialize the grid.
-     */
-    public void initialize() {
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                Tile tile = new Tile(0);
-                tileArray[r][c] = tile;
+    private final TileLabel[][] tiles = new TileLabel[SIZE][SIZE];
+    private final int[][] board = new int[SIZE][SIZE];
+    private final Random random = new Random();
+    private JPanel gridPanel;
+
+    public Grid() {
+        setTitle("2048 Game");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(500, 550);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(0xfaf8ef));
+        setResizable(false);
+
+        // Background grid (for visual 4x4 look)
+        JPanel backgroundGrid = new JPanel(new GridLayout(SIZE, SIZE, GAP, GAP));
+        backgroundGrid.setBackground(new Color(0xf4b6c2));
+        for (int i = 0; i < SIZE * SIZE; i++) {
+            JPanel cell = new JPanel();
+            cell.setBackground(new Color(0xf9d8e2));
+            backgroundGrid.add(cell);
+        }
+
+        // Foreground grid for movable tiles (absolute positioning)
+        gridPanel = new JPanel(null);
+        gridPanel.setPreferredSize(new Dimension(450, 450));
+        gridPanel.setBackground(new Color(0xf4b6c2));
+        gridPanel.add(backgroundGrid);
+        backgroundGrid.setBounds(GRID_PADDING, GRID_PADDING, 450 - 2 * GRID_PADDING, 450 - 2 * GRID_PADDING);
+
+        // Create tile labels (movable ones)
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                TileLabel tile = new TileLabel("");
+                tile.setFont(new Font("Arial", Font.BOLD, 32));
+                tile.setBackground(new Color(0xf9d8e2));
+                tile.setForeground(Color.DARK_GRAY);
+                tile.setBounds(getTileX(c), getTileY(r), TILE_SIZE, TILE_SIZE);
+                tile.setVisible(false); // hidden until spawned
+                tiles[r][c] = tile;
+                gridPanel.add(tile);
             }
         }
+
+        // Top bar
+        JButton newGameButton = new JButton("New Game");
+        newGameButton.addActionListener(e -> {
+            dispose();
+            new Grid();
+        });
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(new Color(0xfaf8ef));
+        topPanel.setPreferredSize(new Dimension(10, 50));
+        topPanel.add(newGameButton, BorderLayout.WEST);
+        add(topPanel, BorderLayout.NORTH);
+
+        add(gridPanel, BorderLayout.CENTER);
+        addKeyListener(this);
+        setFocusable(true);
+        setLocationRelativeTo(null);
 
         spawnRandomTile();
         spawnRandomTile();
+        updateBoard();
+
+        setVisible(true);
     }
 
-    public Tile[][] getTileArray() {
-        return tileArray;
+    private int getTileX(int col) {
+        return GRID_PADDING + col * (TILE_SIZE + GAP);
     }
 
-    public int getScore() {
-        return score;
+    private int getTileY(int row) {
+        return GRID_PADDING + row * (TILE_SIZE + GAP);
     }
 
-    /**
-     * Get the empty tiles in the grid.
-     * @return ArrayList of empty tiles
-     */
-    public ArrayList<Tile> getEmptyTiles() {
-        var emptyTiles = new ArrayList<Tile>();
+    private void spawnRandomTile() {
+        int emptyCount = 0;
+        for (int r = 0; r < SIZE; r++)
+            for (int c = 0; c < SIZE; c++)
+                if (board[r][c] == 0) emptyCount++;
 
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                if (tileArray[r][c].isEmpty()) {
-                    emptyTiles.add(tileArray[r][c]);
-                }
-            }
-        }
+        if (emptyCount == 0) return;
 
-        return emptyTiles;
-    }
+        int target = random.nextInt(emptyCount);
+        int count = 0;
 
-    /**
-     * Spawn a tile with value 2 at a random position in the grid.
-     */
-    public void spawnRandomTile() {
-        var emptyTiles = getEmptyTiles();
-        var random = new Random(); 
-        emptyTiles.get(random.nextInt(emptyTiles.size())).setValue(2);
-    }
-
-    /**
-     * Check if the user can make another move.
-     * @return whether the user can make another move
-     */
-    public boolean canMove() {
-        // Implement !!!!!!!!!!!!!!!!!!!!!!!!
-        return true;
-    }
-
-    /**
-     * See what would happen by doing a certain move.
-     * @param direction of move
-     * @return MovePlan containing MoveActions
-     */
-    public MovePlan computeMove(Direction dir) {
-        MovePlan movePlan = switch (dir) {
-            case LEFT -> computeLeftMove();
-            case RIGHT -> computeRightMove();
-            case UP -> computeUpMove();
-            case DOWN -> computeDownMove();
-            default -> computeDownMove();
-        };
-        return movePlan;
-    }
-
-    /**
-     * See what would happen by doing a move to the left.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeLeftMove() {
-        boolean merged = false;
-        int endCol;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.LEFT);
-
-        for (int startRow = 0; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = 1; startCol < GRID_SIZE; startCol++) {
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endCol = startCol;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startCol - 1;
-                while (i >= 0) {
-                    if (tileArray[startRow][i].isEmpty()) {
-                        endCol = i;
-                    } else if (tileArray[startRow][i].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endCol = i;
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                if (board[r][c] == 0) {
+                    if (count == target) {
+                        board[r][c] = 2;
+                        return;
                     }
-                    i--;
+                    count++;
                 }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, startRow, endCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
             }
         }
-        return movePlan;
     }
 
-    /**
-     * See what would happen by doing a move to the right.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeRightMove() {
-        boolean merged = false;
-        int endCol;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.RIGHT); 
-
-        for (int startRow = 0; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = GRID_SIZE - 2; startCol >= 0; startCol--) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
+    private void updateBoard() {
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                int value = board[r][c];
+                TileLabel t = tiles[r][c];
+                if (value == 0) {
+                    t.setVisible(false);
+                } else {
+                    t.setVisible(true);
+                    t.setText(String.valueOf(value));
+                    t.setBackground(getTileColor(value));
                 }
-                
-                endCol = startCol;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startCol + 1; 
-                while (i <= GRID_SIZE - 1) { 
-                    if (tileArray[startRow][i].isEmpty()) {
-                        endCol = i;
-                    } else if (tileArray[startRow][i].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endCol = i;
-                    }
-                    i++; 
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, startRow, endCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
             }
         }
-        return movePlan;
     }
 
-    /**
-     * See what would happen by doing an upward move.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeUpMove() {
-        boolean merged = false;
-        int endRow;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.UP); 
-
-        for (int startRow = 1; startRow < GRID_SIZE; startRow++) {
-            for (int startCol = 0; startCol < GRID_SIZE; startCol++) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endRow = startRow;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startRow - 1;
-                while (i >= 0) {
-                    if (tileArray[i][startCol].isEmpty()) {
-                        endRow = i;
-                    } else if (tileArray[i][startCol].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endRow = i;
-                    }
-                    i--;
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, endRow, startCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
-            }
-        }
-        return movePlan;
-    }
-
-    /**
-     * See what would happen by doing a downward move.
-     * @return MovePlan containing MoveActions.
-     */
-    public MovePlan computeDownMove() {
-        boolean merged = false;
-        int endRow;
-        int newValue;
-        int i;
-        String type;
-        var movePlan = new MovePlan(Direction.DOWN); 
-
-        for (int startRow = GRID_SIZE - 2; startRow >= 0; startRow--) {
-            for (int startCol = 0; startCol < GRID_SIZE; startCol++) { 
-                if (tileArray[startRow][startCol].isEmpty()) {
-                    continue;
-                }
-                
-                endRow = startRow;
-                newValue = tileArray[startRow][startCol].getValue();
-                i = startRow + 1;
-                while (i < GRID_SIZE) {
-                    if (tileArray[i][startCol].isEmpty()) {
-                        endRow = i;
-                    } else if (tileArray[i][startCol].getValue() == tileArray[startRow][startCol].getValue() && !merged) {
-                        merged = true;
-                        newValue = tileArray[startRow][startCol].getValue() * 2;
-                        endRow = i;
-                    }
-                    i++;
-                }
-                type = merged ? "merge" : "slide";
-
-                var moveAction = new MoveAction(startRow, startCol, endRow, startCol, tileArray[startRow][startCol].getValue(), newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(moveAction.getNewValue());
-            }
-        }
-        return movePlan;
-    }
-    
-
-    public void applyMove(MovePlan movePlan) {
-        if (!movePlan.isChanged()) {
-            return;
-        }
-
-        score += movePlan.getScoreGained();
-
-        List<MoveAction> actions = movePlan.getActions();
-        for (MoveAction action : actions) {
-            tileArray[action.getStartRow()][action.getStartCol()].setValue(0); 
-            tileArray[action.getEndRow()][action.getEndCol()].setValue(action.getNewValue());
+    private Color getTileColor(int value) {
+        switch (value) {
+            case 2: return new Color(0xffe4ec);
+            case 4: return new Color(0xf9c6d2);
+            case 8: return new Color(0xf7a6ba);
+            case 16: return new Color(0xf284ac);
+            case 32: return new Color(0xef639b);
+            case 64: return new Color(0xeb4b92);
+            case 128: return new Color(0xe33680);
+            case 256: return new Color(0xcc2b70);
+            case 512: return new Color(0xb02064);
+            case 1024: return new Color(0x8d1755);
+            case 2048: return new Color(0x6b0f47);
+            default: return new Color(0xf9d8e2);
         }
     }
-    
-    // For testing purposes
+
     @Override
-    public String toString() {
-        String str = "";
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                str += tileArray[r][c].getValue() + " ";
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                TileLabel t = tiles[r][c];
+                if (t.isVisible()) {
+                    if (key == KeyEvent.VK_LEFT) animateMove(t, -1, 0);
+                    if (key == KeyEvent.VK_RIGHT) animateMove(t, 1, 0);
+                    if (key == KeyEvent.VK_UP) animateMove(t, 0, -1);
+                    if (key == KeyEvent.VK_DOWN) animateMove(t, 0, 1);
+                }
             }
-            str += "\n";
         }
-        return str;
     }
+
+    private void animateMove(TileLabel tile, int dx, int dy) {
+        Timer timer = new Timer(5, null);
+        timer.addActionListener(e -> {
+            tile.setLocation(tile.getX() + dx, tile.getY() + dy);
+            // stop after 50px movement for demo
+            if (Math.abs(tile.getX() - getTileX(0)) > 80 || Math.abs(tile.getY() - getTileY(0)) > 80) {
+                ((Timer) e.getSource()).stop();
+            }
+        });
+        timer.start();
+    }
+
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
 
     public static void main(String[] args) {
-        var grid = new Grid();
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.RIGHT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.DOWN));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.LEFT));
-        System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.UP));  
+        new Grid();
     }
 }

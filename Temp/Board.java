@@ -1,4 +1,3 @@
-package Temp;
 import java.util.Random;
 import java.awt.*;
 import java.awt.event.*;
@@ -87,6 +86,9 @@ public class Board extends JFrame{
             }
         }
 
+    }
+    public static void main(String[] args) {
+        new Board();
     }
 }
 
