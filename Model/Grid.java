@@ -61,7 +61,7 @@ public class Grid {
         // Spawn a tile
         var emptyTiles = getEmptyTiles(tileArray);
         Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
-        randomTile.setValue(2);
+        randomTile.setValue(random.nextFloat() < 0.9 ? 2 : 4);
 
         // Make move action for spawning a tile
         Point position = getGridPosition(randomTile);
