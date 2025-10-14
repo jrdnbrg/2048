@@ -93,107 +93,130 @@ public class Grid {
     }
 
     /**
+     * Make a copy of the grid array.
+     * @return
+     */
+    public Tile[][] getGridCopy() {
+        var tileArrayCopy = new Tile[GRID_SIZE][GRID_SIZE];
+
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                tileArrayCopy[r][c] = tileArray[r][c];
+            }
+        }
+
+        return tileArrayCopy;
+    }
+
+    /**
+     * Reverse the order of an array. Helper method for computeMove.
+     * @param array of integers
+     */
+    public void reverseArray(int[] array) {
+        for (int i = 0; i < array.length / 2; i++) {
+            int temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+    }
+
+    /**
      * See what would happen by doing a certain move without changing the grid.
      * @param direction of move
      * @return MovePlan containing MoveActions
      */
     public MovePlan computeMove(Direction dir) {
-        int nextRow;
-        int nextCol;
-        int newRow;
-        int newCol;
-        int oldValue;
-        int newValue;
-        String type;
-
-        // Make copy of current grid
-        var gridCopy = this;
-        Tile[][] tileArray = gridCopy.getTileArray();
         MovePlan movePlan = new MovePlan(dir);
+        var tileArrayCopy = getGridCopy();
 
-        // Compute row and column values used in the upcoming loop depending on direction
-        int rowChange = (dir == Direction.UP) ? -1 : (dir == Direction.DOWN) ? 1 : 0;
-        int colChange = (dir == Direction.LEFT) ? -1 : (dir == Direction.RIGHT) ? 1 : 0;
-        int rowStep = (dir == Direction.DOWN) ? -1 : 1;
-        int colStep = (dir == Direction.RIGHT) ? -1 : 1;
-        int startRow = (dir == Direction.UP) ? 1 : (dir == Direction.DOWN) ? GRID_SIZE - 2 : 0;
-        int startCol = (dir == Direction.LEFT) ? 1 : (dir == Direction.RIGHT) ? GRID_SIZE - 2 : 0;
+        // Make list for row and column loop order
+        int[] rowOrder = new int[GRID_SIZE];
+        int[] colOrder = new int[GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            rowOrder[i] = i;
+            colOrder[i] = i;
+        }
 
-        // Loop over all tiles in the grid
-        for (int r = startRow; r >= 0 && r < GRID_SIZE; r += rowStep) {
-            for (int c = startCol; c >= 0 && c < GRID_SIZE; c += colStep) {
+        // Reverse order (or not) based on direction
+        if (dir == Direction.DOWN) {
+            reverseArray(rowOrder);
+        } else if (dir == Direction.RIGHT) {
+            reverseArray(colOrder);
+        }
 
-                // If tile is empty, continue to the next tile
-                if (tileArray[r][c].isEmpty()) {
+        // Store how row and col should change while looping to find new position of tile
+        int dRow = dir == Direction.UP ? -1 : dir == Direction.DOWN ? 1 : 0;
+        int dCol = dir == Direction.LEFT ? -1 : dir == Direction.RIGHT ? 1 : 0;
+
+        // Loop through all tiles in grid
+        for (int rIndex = 0; rIndex < GRID_SIZE; rIndex++) {
+            for (int cIndex = 0; cIndex < GRID_SIZE; cIndex++) {
+                int r = rowOrder[rIndex];
+                int c = colOrder[cIndex];
+
+                Tile current = tileArrayCopy[r][c];
+                if (current.isEmpty()) {
                     continue;
                 }
 
-                oldValue = tileArray[r][c].getValue();
-                newValue = oldValue;
-                nextRow = r + rowChange;
-                nextCol = c + colChange; 
-                newRow = nextRow;
-                newCol = nextCol;
+                int startRow = r;
+                int startCol = c;
+                int value = current.getValue();
+                int newRow = r;
+                int newCol = c;
 
-                // Loop over all values in the row/column before the current value
+                int nextRow = r + dRow;
+                int nextCol = c + dCol;
+
+                // Loop through all tiles in correct direction to check for slides and merges
                 while (nextRow >= 0 && nextRow < GRID_SIZE && nextCol >= 0 && nextCol < GRID_SIZE) {
+                    Tile next = tileArrayCopy[nextRow][nextCol];
 
-                    // Check if next tile is empty or has the same value as the current tile
-                    if (tileArray[nextRow][nextCol].isEmpty()) {
-                        // Move the current tile to the position of this next tile
+                    if (next.isEmpty()) {
+                        // Move current tile to next tile
                         newRow = nextRow;
                         newCol = nextCol;
-                    } else if (tileArray[nextRow][nextCol].getValue() == tileArray[r][c].getValue() && !tileArray[nextRow][nextCol].isMerged()) {
-                        // Move the current tile to the position of this next tile
+                        nextRow += dRow;
+                        nextCol += dCol;
+                    } else if (next.getValue() == value && !next.isMerged()) {
+                        // Merge current tile with next tile
                         newRow = nextRow;
                         newCol = nextCol;
-
-                        // Merge the tiles
-                        newValue = oldValue * 2;
-                        tileArray[newRow][newCol].setMerged(true);
+                        value *= 2;
+                        next.setMerged(true);
+                        break;
+                    } else {
+                        break;
                     }
-
-                    nextRow += rowChange;
-                    nextCol += colChange;
                 }
 
-                // Update the grid
-                tileArray[newRow][newCol].setValue(newValue);
-                tileArray[r][c].reset();
-                
-                // Decide the type of the move
-                type = tileArray[newRow][newCol].isMerged() ? "merge" : "slide";
-                
-                // Add moveAction of this move to the MovePlan
-                var moveAction = new MoveAction(r, c, newRow, newCol, oldValue, newValue, type);
-                movePlan.addAction(moveAction);
-                movePlan.setChanged(movePlan.isChanged() ? true : moveAction.hasPositionChange());
-                movePlan.addScore(newValue);
+                if (newRow == startRow && newCol == startCol) {
+                    continue;
+                }
+
+                // Add move to move plan
+                String type = (value > current.getValue()) ? "merge" : "slide";
+                MoveAction action = new MoveAction(startRow, startCol, newRow, newCol, current.getValue(), value, type);
+                movePlan.addAction(action);
+                movePlan.addScore(value);
+                movePlan.setChanged(true);
+
+                // Change the tile array copy
+                tileArrayCopy[startRow][startCol].setValue(0);
+                tileArrayCopy[newRow][newCol].setValue(value);
             }
         }
-
-        // Check if the move changed anything in the grid
-        if (movePlan.isChanged()) {
-            // Spawn a random tile
-            gridCopy.spawnRandomTile();
-
-            // Add the spawn to the MovePlan
-            int row = (int) getGridPosition(randomTile).getX();
-            int col = (int) getGridPosition(randomTile).getY();
-            var spawn = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
-            movePlan.addAction(spawn);
-        }
-
         return movePlan;
     }
 
     /**
-     * Apply a move computed in computeMove to the grid.
+     * Apply a move computed in computeMove to the grid and spawn a new tile.
      * @param movePlan containing MoveActions
+     * @return MovePlan updated with spawn action
      */
-    public void applyMove(MovePlan movePlan) {
+    public MovePlan applyMove(MovePlan movePlan) {
         if (!movePlan.isChanged()) {
-            return;
+            return movePlan;
         }
 
         score += movePlan.getScoreGained();
@@ -204,7 +227,20 @@ public class Grid {
             tileArray[action.getEndRow()][action.getEndCol()].setValue(action.getNewValue());
         }
 
-        System.out.println(movePlan);
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                tileArray[r][c].setMerged(false);
+            }
+        }
+
+        spawnRandomTile();
+        Point position = getGridPosition(randomTile);
+        int row = (int) position.getX();
+        int col = (int) position.getY();
+        MoveAction action = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
+        movePlan.addAction(action);
+
+        return movePlan;
     }
 
     /**
@@ -230,17 +266,14 @@ public class Grid {
     }
 
     public static void main(String[] args) {
-        var grid = new Grid();
-        for (int i = 0; i < 1; i++) {       
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.RIGHT));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.DOWN));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.LEFT));
-            System.out.println(grid);
-            grid.applyMove(grid.computeMove(Direction.UP)); 
-        }
-         
+        var grid = new Grid(); 
+        System.out.println(grid);
+        grid.applyMove(grid.computeMove(Direction.RIGHT));
+        System.out.println(grid);
+        grid.applyMove(grid.computeMove(Direction.DOWN));
+        System.out.println(grid);
+        grid.applyMove(grid.computeMove(Direction.LEFT));
+        System.out.println(grid);
+        grid.applyMove(grid.computeMove(Direction.UP)); 
     }
 }
