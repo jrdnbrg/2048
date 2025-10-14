@@ -1,180 +1,318 @@
 package Model;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.Random;
+import java.util.*;
 
-public class Grid extends JFrame implements KeyListener {
-    private static final int SIZE = 4;
-    private static final int TILE_SIZE = 100;
-    private static final int GAP = 15;
-    private static final int GRID_PADDING = 20;
+/**
+ * Object that stores the grid of the game.
+ */
+public class Grid {
+    private static final int GRID_SIZE = 4;
+    private Random random;
+    private Tile[][] tileArray;
+    private int score;
 
-    private final TileLabel[][] tiles = new TileLabel[SIZE][SIZE];
-    private final int[][] board = new int[SIZE][SIZE];
-    private final Random random = new Random();
-    private JPanel gridPanel;
+    /**
+     * Constructor.
+     */
+    Grid() {
+        random = new Random();
+        tileArray = new Tile[GRID_SIZE][GRID_SIZE];
+        score = 0;
+    }
 
-    public Grid() {
-        setTitle("2048 Game");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(500, 550);
-        setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(0xfaf8ef));
-        setResizable(false);
+    public Tile[][] getTileArray() {
+        return tileArray;
+    }
 
-        // Background grid (for visual 4x4 look)
-        JPanel backgroundGrid = new JPanel(new GridLayout(SIZE, SIZE, GAP, GAP));
-        backgroundGrid.setBackground(new Color(0xf4b6c2));
-        for (int i = 0; i < SIZE * SIZE; i++) {
-            JPanel cell = new JPanel();
-            cell.setBackground(new Color(0xf9d8e2));
-            backgroundGrid.add(cell);
-        }
+    public int getScore() {
+        return score;
+    }
+    
+    /**
+     * Initialize the grid.
+     */
+    public MovePlan initialize() {
+        String id;
 
-        // Foreground grid for movable tiles (absolute positioning)
-        gridPanel = new JPanel(null);
-        gridPanel.setPreferredSize(new Dimension(450, 450));
-        gridPanel.setBackground(new Color(0xf4b6c2));
-        gridPanel.add(backgroundGrid);
-        backgroundGrid.setBounds(GRID_PADDING, GRID_PADDING, 450 - 2 * GRID_PADDING, 450 - 2 * GRID_PADDING);
-
-        // Create tile labels (movable ones)
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                TileLabel tile = new TileLabel("");
-                tile.setFont(new Font("Arial", Font.BOLD, 32));
-                tile.setBackground(new Color(0xf9d8e2));
-                tile.setForeground(Color.DARK_GRAY);
-                tile.setBounds(getTileX(c), getTileY(r), TILE_SIZE, TILE_SIZE);
-                tile.setVisible(false); // hidden until spawned
-                tiles[r][c] = tile;
-                gridPanel.add(tile);
+        // Add tiles to the grid
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                id = UUID.randomUUID().toString();
+                Tile tile = new Tile(UUID.randomUUID().toString());
+                tileArray[r][c] = tile;
             }
         }
 
-        // Top bar
-        JButton newGameButton = new JButton("New Game");
-        newGameButton.addActionListener(e -> {
-            dispose();
-            new Grid();
-        });
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(0xfaf8ef));
-        topPanel.setPreferredSize(new Dimension(10, 50));
-        topPanel.add(newGameButton, BorderLayout.WEST);
-        add(topPanel, BorderLayout.NORTH);
+        // Make move plan for spawning two random tiles
+        var tileArrayCopy = getGridCopy();
+        var movePlan = new MovePlan(null);
+        movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        movePlan.setChanged(true);
 
-        add(gridPanel, BorderLayout.CENTER);
-        addKeyListener(this);
-        setFocusable(true);
-        setLocationRelativeTo(null);
-
-        spawnRandomTile();
-        spawnRandomTile();
-        updateBoard();
-
-        setVisible(true);
+        return movePlan;
     }
 
-    private int getTileX(int col) {
-        return GRID_PADDING + col * (TILE_SIZE + GAP);
+    /**
+     * Spawn a tile with value 2 at a random position in the grid.
+     */
+    public MoveAction spawnRandomTile(Tile[][] tileArray) {
+        // Spawn a tile
+        var emptyTiles = getEmptyTiles(tileArray);
+        Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
+        randomTile.setValue(random.nextFloat() < 0.9 ? 2 : 4);
+
+        // Make move action for spawning a tile
+        Point position = getGridPosition(randomTile);
+        int row = (int) position.getX();
+        int col = (int) position.getY();
+        MoveAction action = new MoveAction(row, col, row, col, 0, randomTile.getValue(), "spawn");
+
+        return action;
     }
 
-    private int getTileY(int row) {
-        return GRID_PADDING + row * (TILE_SIZE + GAP);
+    /**
+     * Get the empty tiles in the grid.
+     * @return ArrayList of empty tiles
+     */
+    public ArrayList<Tile> getEmptyTiles(Tile[][] tileArray) {
+        var emptyTiles = new ArrayList<Tile>();
+
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                if (tileArray[r][c].isEmpty()) {
+                    emptyTiles.add(tileArray[r][c]);
+                }
+            }
+        }
+
+        return emptyTiles;
     }
 
-    private void spawnRandomTile() {
-        int emptyCount = 0;
-        for (int r = 0; r < SIZE; r++)
-            for (int c = 0; c < SIZE; c++)
-                if (board[r][c] == 0) emptyCount++;
+    /**
+     * See what would happen by doing a certain move without changing the grid.
+     * @param direction of move
+     * @return MovePlan containing MoveActions
+     */
+    public MovePlan computeMove(Direction dir) {
+        MovePlan movePlan = new MovePlan(dir);
+        var tileArrayCopy = getGridCopy();
 
-        if (emptyCount == 0) return;
+        // Make list for row and column loop order
+        int[] rowOrder = new int[GRID_SIZE];
+        int[] colOrder = new int[GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            rowOrder[i] = i;
+            colOrder[i] = i;
+        }
 
-        int target = random.nextInt(emptyCount);
-        int count = 0;
+        // Reverse order (or not) based on direction
+        if (dir == Direction.DOWN) {
+            reverseArray(rowOrder);
+        } else if (dir == Direction.RIGHT) {
+            reverseArray(colOrder);
+        }
 
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                if (board[r][c] == 0) {
-                    if (count == target) {
-                        board[r][c] = 2;
-                        return;
+        // Store how row and col should change while looping to find new position of tile
+        int dRow = dir == Direction.UP ? -1 : dir == Direction.DOWN ? 1 : 0;
+        int dCol = dir == Direction.LEFT ? -1 : dir == Direction.RIGHT ? 1 : 0;
+
+        // Loop through all tiles in grid
+        for (int rIndex = 0; rIndex < GRID_SIZE; rIndex++) {
+            for (int cIndex = 0; cIndex < GRID_SIZE; cIndex++) {
+                int r = rowOrder[rIndex];
+                int c = colOrder[cIndex];
+
+                Tile current = tileArrayCopy[r][c];
+                if (current.isEmpty()) {
+                    continue;
+                }
+
+                int startRow = r;
+                int startCol = c;
+                int value = current.getValue();
+                int newRow = r;
+                int newCol = c;
+
+                int nextRow = r + dRow;
+                int nextCol = c + dCol;
+
+                // Loop through all tiles in correct direction to check for slides and merges
+                while (nextRow >= 0 && nextRow < GRID_SIZE && nextCol >= 0 && nextCol < GRID_SIZE) {
+                    Tile next = tileArrayCopy[nextRow][nextCol];
+
+                    if (next.isEmpty()) {
+                        // Move current tile to next tile
+                        newRow = nextRow;
+                        newCol = nextCol;
+                        nextRow += dRow;
+                        nextCol += dCol;
+                    } else if (next.getValue() == value && !next.isMerged()) {
+                        // Merge current tile with next tile
+                        newRow = nextRow;
+                        newCol = nextCol;
+                        value *= 2;
+                        next.setMerged(true);
+                        break;
+                    } else {
+                        break;
                     }
-                    count++;
                 }
+
+                if (newRow == startRow && newCol == startCol) {
+                    continue;
+                }
+
+                // Add move to move plan
+                String type = (value > current.getValue()) ? "merge" : "slide";
+                MoveAction action = new MoveAction(startRow, startCol, newRow, newCol, current.getValue(), value, type);
+                movePlan.addAction(action);
+                movePlan.addScore(value);
+                movePlan.setChanged(true);
+
+                // Change the tile array copy
+                tileArrayCopy[startRow][startCol].setValue(0);
+                tileArrayCopy[newRow][newCol].setValue(value);
+            }
+        }
+
+        if (movePlan.isChanged()) {
+            movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        }
+        return movePlan;
+    }
+
+    /**
+     * Get the position of a tile in the grid.
+     * @param tile to check the position of
+     * @return point with the row and column index of the tile
+     */
+    public Point getGridPosition(Tile tile) {
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                if (tile.getId().equals(tileArray[r][c].getId())) {
+                    return new Point(r, c);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Make a copy of the grid array.
+     * @return
+     */
+    public Tile[][] getGridCopy() {
+        var tileArrayCopy = new Tile[GRID_SIZE][GRID_SIZE];
+
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                Tile orginal = tileArray[r][c];
+                Tile copy = new Tile(orginal.getId());
+                copy.setValue(orginal.getValue());
+                copy.setMerged(orginal.isMerged());
+                tileArrayCopy[r][c] = copy;
+            }
+        }
+        return tileArrayCopy;
+    }
+
+    /**
+     * Reverse the order of an array. Helper method for computeMove.
+     * @param array of integers
+     */
+    public void reverseArray(int[] array) {
+        for (int i = 0; i < array.length / 2; i++) {
+            int temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+    }
+
+    /**
+     * Apply a move computed in computeMove to the grid and spawn a new tile.
+     * @param movePlan containing MoveActions
+     * @return MovePlan updated with spawn action
+     */
+    public void applyMove(MovePlan movePlan) {
+        if (!movePlan.isChanged()) {
+            return;
+        }
+
+        score += movePlan.getScoreGained();
+
+        ArrayList<MoveAction> actions = movePlan.getActions();
+        for (MoveAction action : actions) {
+            tileArray[action.getStartRow()][action.getStartCol()].setValue(0); 
+            tileArray[action.getEndRow()][action.getEndCol()].setValue(action.getNewValue());
+        }
+
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                tileArray[r][c].setMerged(false);
             }
         }
     }
 
-    private void updateBoard() {
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                int value = board[r][c];
-                TileLabel t = tiles[r][c];
-                if (value == 0) {
-                    t.setVisible(false);
-                } else {
-                    t.setVisible(true);
-                    t.setText(String.valueOf(value));
-                    t.setBackground(getTileColor(value));
-                }
+    /**
+     * Check if the user can make another move.
+     * @return whether the user can make another move
+     */
+    public boolean canMove() {
+        for (Direction dir : Direction.values()) {
+            if (computeMove(dir).isChanged()) {
+                return true;
             }
         }
+        return false;
     }
-
-    private Color getTileColor(int value) {
-        switch (value) {
-            case 2: return new Color(0xffe4ec);
-            case 4: return new Color(0xf9c6d2);
-            case 8: return new Color(0xf7a6ba);
-            case 16: return new Color(0xf284ac);
-            case 32: return new Color(0xef639b);
-            case 64: return new Color(0xeb4b92);
-            case 128: return new Color(0xe33680);
-            case 256: return new Color(0xcc2b70);
-            case 512: return new Color(0xb02064);
-            case 1024: return new Color(0x8d1755);
-            case 2048: return new Color(0x6b0f47);
-            default: return new Color(0xf9d8e2);
-        }
-    }
-
+    
+    // For testing purposes
     @Override
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                TileLabel t = tiles[r][c];
-                if (t.isVisible()) {
-                    if (key == KeyEvent.VK_LEFT) animateMove(t, -1, 0);
-                    if (key == KeyEvent.VK_RIGHT) animateMove(t, 1, 0);
-                    if (key == KeyEvent.VK_UP) animateMove(t, 0, -1);
-                    if (key == KeyEvent.VK_DOWN) animateMove(t, 0, 1);
-                }
+    public String toString() {
+        String str = "";
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                str += tileArray[r][c].getValue() + " ";
             }
+            str += "\n";
         }
+        return str;
     }
 
-    private void animateMove(TileLabel tile, int dx, int dy) {
-        Timer timer = new Timer(5, null);
-        timer.addActionListener(e -> {
-            tile.setLocation(tile.getX() + dx, tile.getY() + dy);
-            // stop after 50px movement for demo
-            if (Math.abs(tile.getX() - getTileX(0)) > 80 || Math.abs(tile.getY() - getTileY(0)) > 80) {
-                ((Timer) e.getSource()).stop();
-            }
-        });
-        timer.start();
-    }
+    public void testGrid() {
+        tileArray[0][0].setValue(4);
+        tileArray[0][1].setValue(8);
+        tileArray[0][2].setValue(4);
+        tileArray[0][3].setValue(2);
 
-    @Override public void keyReleased(KeyEvent e) {}
-    @Override public void keyTyped(KeyEvent e) {}
+        tileArray[1][0].setValue(8);
+        tileArray[1][1].setValue(16);
+        tileArray[1][2].setValue(8);
+        tileArray[1][3].setValue(16);
+
+        tileArray[2][0].setValue(4);
+        tileArray[2][1].setValue(2);
+        tileArray[2][2].setValue(64);
+        tileArray[2][3].setValue(4);
+
+        tileArray[3][0].setValue(2);
+        tileArray[3][1].setValue(16);
+        tileArray[3][2].setValue(4);
+        tileArray[3][3].setValue(2);
+    }
 
     public static void main(String[] args) {
-        new Grid();
+        var grid = new Grid();
+        grid.applyMove(grid.initialize());
+        System.out.println(grid);
+
+        while (grid.canMove()) {
+            for (Direction dir : Direction.values()) {
+                grid.applyMove(grid.computeMove(dir));
+                System.out.println(grid);
+            }
+        }
     }
 }
