@@ -20,6 +20,14 @@ public class Grid {
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
     }
+
+    public Tile[][] getTileArray() {
+        return tileArray;
+    }
+
+    public int getScore() {
+        return score;
+    }
     
     /**
      * Initialize the grid.
@@ -36,46 +44,22 @@ public class Grid {
             }
         }
 
-        // Spawn 2 random tiles
+        // Make move plan for spawning two random tiles
+        var tileArrayCopy = getGridCopy();
         var movePlan = new MovePlan(null);
-        movePlan.addAction(spawnRandomTile());
-        movePlan.addAction(spawnRandomTile());
+        movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        movePlan.setChanged(true);
 
         return movePlan;
-    }
-
-    public Tile[][] getTileArray() {
-        return tileArray;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    /**
-     * Get the empty tiles in the grid.
-     * @return ArrayList of empty tiles
-     */
-    public ArrayList<Tile> getEmptyTiles() {
-        var emptyTiles = new ArrayList<Tile>();
-
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                if (tileArray[r][c].isEmpty()) {
-                    emptyTiles.add(tileArray[r][c]);
-                }
-            }
-        }
-
-        return emptyTiles;
     }
 
     /**
      * Spawn a tile with value 2 at a random position in the grid.
      */
-    public MoveAction spawnRandomTile() {
+    public MoveAction spawnRandomTile(Tile[][] tileArray) {
         // Spawn a tile
-        var emptyTiles = getEmptyTiles();
+        var emptyTiles = getEmptyTiles(tileArray);
         Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
         randomTile.setValue(2);
 
@@ -89,50 +73,21 @@ public class Grid {
     }
 
     /**
-     * Get the position of a tile in the grid.
-     * @param tile to check the position of
-     * @return point with the row and column index of the tile
+     * Get the empty tiles in the grid.
+     * @return ArrayList of empty tiles
      */
-    public Point getGridPosition(Tile tile) {
+    public ArrayList<Tile> getEmptyTiles(Tile[][] tileArray) {
+        var emptyTiles = new ArrayList<Tile>();
+
         for (int r = 0; r < GRID_SIZE; r++) {
             for (int c = 0; c < GRID_SIZE; c++) {
-                if (tile.getId().equals(tileArray[r][c].getId())) {
-                    return new Point(r, c);
+                if (tileArray[r][c].isEmpty()) {
+                    emptyTiles.add(tileArray[r][c]);
                 }
             }
         }
-        return null;
-    }
 
-    /**
-     * Make a copy of the grid array.
-     * @return
-     */
-    public Tile[][] getGridCopy() {
-        var tileArrayCopy = new Tile[GRID_SIZE][GRID_SIZE];
-
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                Tile orginal = tileArray[r][c];
-                Tile copy = new Tile(orginal.getId());
-                copy.setValue(orginal.getValue());
-                copy.setMerged(orginal.isMerged());
-                tileArrayCopy[r][c] = copy;
-            }
-        }
-        return tileArrayCopy;
-    }
-
-    /**
-     * Reverse the order of an array. Helper method for computeMove.
-     * @param array of integers
-     */
-    public void reverseArray(int[] array) {
-        for (int i = 0; i < array.length / 2; i++) {
-            int temp = array[i];
-            array[i] = array[array.length - 1 - i];
-            array[array.length - 1 - i] = temp;
-        }
+        return emptyTiles;
     }
 
     /**
@@ -221,7 +176,58 @@ public class Grid {
                 tileArrayCopy[newRow][newCol].setValue(value);
             }
         }
+
+        if (movePlan.isChanged()) {
+            movePlan.addAction(spawnRandomTile(tileArrayCopy));
+        }
         return movePlan;
+    }
+
+    /**
+     * Get the position of a tile in the grid.
+     * @param tile to check the position of
+     * @return point with the row and column index of the tile
+     */
+    public Point getGridPosition(Tile tile) {
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                if (tile.getId().equals(tileArray[r][c].getId())) {
+                    return new Point(r, c);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Make a copy of the grid array.
+     * @return
+     */
+    public Tile[][] getGridCopy() {
+        var tileArrayCopy = new Tile[GRID_SIZE][GRID_SIZE];
+
+        for (int r = 0; r < GRID_SIZE; r++) {
+            for (int c = 0; c < GRID_SIZE; c++) {
+                Tile orginal = tileArray[r][c];
+                Tile copy = new Tile(orginal.getId());
+                copy.setValue(orginal.getValue());
+                copy.setMerged(orginal.isMerged());
+                tileArrayCopy[r][c] = copy;
+            }
+        }
+        return tileArrayCopy;
+    }
+
+    /**
+     * Reverse the order of an array. Helper method for computeMove.
+     * @param array of integers
+     */
+    public void reverseArray(int[] array) {
+        for (int i = 0; i < array.length / 2; i++) {
+            int temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
     }
 
     /**
@@ -229,9 +235,9 @@ public class Grid {
      * @param movePlan containing MoveActions
      * @return MovePlan updated with spawn action
      */
-    public MovePlan applyMove(MovePlan movePlan) {
+    public void applyMove(MovePlan movePlan) {
         if (!movePlan.isChanged()) {
-            return movePlan;
+            return;
         }
 
         score += movePlan.getScoreGained();
@@ -247,10 +253,6 @@ public class Grid {
                 tileArray[r][c].setMerged(false);
             }
         }
-
-        movePlan.addAction(spawnRandomTile());
-
-        return movePlan;
     }
 
     /**
@@ -280,33 +282,37 @@ public class Grid {
     }
 
     public void testGrid() {
-        tileArray[0][0].setValue(2);
-        tileArray[0][1].setValue(4);
-        tileArray[0][2].setValue(8);
-        tileArray[0][3].setValue(16);
+        tileArray[0][0].setValue(4);
+        tileArray[0][1].setValue(8);
+        tileArray[0][2].setValue(4);
+        tileArray[0][3].setValue(2);
 
-        tileArray[1][0].setValue(32);
-        tileArray[1][1].setValue(64);
-        tileArray[1][2].setValue(128);
-        tileArray[1][3].setValue(256);
+        tileArray[1][0].setValue(8);
+        tileArray[1][1].setValue(16);
+        tileArray[1][2].setValue(8);
+        tileArray[1][3].setValue(16);
 
-        tileArray[2][0].setValue(512);
-        tileArray[2][1].setValue(1024);
-        tileArray[2][2].setValue(2048);
-        tileArray[2][3].setValue(4096);
+        tileArray[2][0].setValue(4);
+        tileArray[2][1].setValue(2);
+        tileArray[2][2].setValue(64);
+        tileArray[2][3].setValue(4);
 
-        tileArray[3][0].setValue(8192);
-        tileArray[3][1].setValue(16384);
-        tileArray[3][2].setValue(32768);
-        tileArray[3][3].setValue(65536);
+        tileArray[3][0].setValue(2);
+        tileArray[3][1].setValue(16);
+        tileArray[3][2].setValue(4);
+        tileArray[3][3].setValue(2);
     }
 
     public static void main(String[] args) {
         var grid = new Grid();
-        grid.initialize();
-        grid.testGrid();
+        grid.applyMove(grid.initialize());
         System.out.println(grid);
-        grid.applyMove(grid.computeMove(Direction.LEFT));
-        System.out.println(grid);
+
+        while (grid.canMove()) {
+            for (Direction dir : Direction.values()) {
+                grid.applyMove(grid.computeMove(dir));
+                System.out.println(grid);
+            }
+        }
     }
 }
