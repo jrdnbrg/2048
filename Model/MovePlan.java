@@ -15,7 +15,7 @@ public class MovePlan {
      * Constructor.
      * @param dir of pressed arrow key
      */
-    MovePlan(Direction dir) {
+    public MovePlan(Direction dir) {
         actions = new ArrayList<MoveAction>();
         scoreGained = 0;
         changed = false;

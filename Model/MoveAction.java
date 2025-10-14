@@ -24,7 +24,7 @@ public class MoveAction {
      * @param newValue of tile
      * @param type of move
      */
-    MoveAction(int startRow, int startCol, int endRow, int endCol, int oldValue, int newValue, String type) {
+    public MoveAction(int startRow, int startCol, int endRow, int endCol, int oldValue, int newValue, String type) {
         this.startRow = startRow;
         this.startCol = startCol;
         this.endRow = endRow;

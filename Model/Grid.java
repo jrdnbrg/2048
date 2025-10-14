@@ -15,7 +15,7 @@ public class Grid {
     /**
      * Constructor.
      */
-    Grid() {
+    public Grid() {
         random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
