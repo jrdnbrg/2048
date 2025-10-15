@@ -6,7 +6,7 @@ import java.util.*;
 /**
  * Object that stores the grid of the game.
  */
-public class Grid {
+public class Model {
     private static final int GRID_SIZE = 4;
     private Random random;
     private Tile[][] tileArray;
@@ -15,7 +15,7 @@ public class Grid {
     /**
      * Constructor.
      */
-    public Grid() {
+    public Model() {
         random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
@@ -304,7 +304,7 @@ public class Grid {
     }
 
     public static void main(String[] args) {
-        var grid = new Grid();
+        var grid = new Model();
         grid.applyMove(grid.initialize());
         System.out.println(grid);
 

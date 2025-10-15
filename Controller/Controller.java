@@ -1,19 +1,20 @@
 package Controller;
 
-
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import Model.*;
 import View.*;
 
-
+/**
+ * Controls the game. Acts as a bridge between the model and view.
+ */
 public class Controller {
-    private Grid model;
+    private Model model;
     private GridViewer view;
     private boolean canMakeMove;
 
-    public Controller(Grid model) {
+    public Controller(Model model) {
         this.model = model;
         canMakeMove = true;
     }
@@ -22,8 +23,12 @@ public class Controller {
         this.view = view;
     }
 
-    public void onKeyPressed(KeyEvent e) {
+    public void startGame() {
+        view.implementMove(model.initialize());
+        view.setScore(0);
+    }
 
+    public void onKeyPressed(KeyEvent e) {
         Direction dir = switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT -> Direction.LEFT;
             case KeyEvent.VK_RIGHT -> Direction.RIGHT;
@@ -50,8 +55,6 @@ public class Controller {
     }
 
     public void applyMoveAfterAnimation(MovePlan movePlan) {
-        // in view, once animation is complete call controller.applyMoveAfteranimation(movePlan)
-
         model.applyMove(movePlan);
         view.updateBoard();
         view.setScore(model.getScore());
