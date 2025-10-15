@@ -101,12 +101,6 @@ public class GridViewer extends JFrame  {
 
 
         setVisible(true);
-
-        
-
-
-
-
     }
 
     /*public String scoreBoard() {
@@ -161,8 +155,6 @@ public class GridViewer extends JFrame  {
                 tiles[r][c].setBackground(getTileColor(value));
             }
         }
-
-    
     }
 
     
