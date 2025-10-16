@@ -28,6 +28,10 @@ public class Model {
     public int getScore() {
         return score;
     }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
     
     /**
      * Initialize the grid.
@@ -168,7 +172,7 @@ public class Model {
                 String type = (value > current.getValue()) ? "merge" : "slide";
                 MoveAction action = new MoveAction(startRow, startCol, newRow, newCol, current.getValue(), value, type);
                 movePlan.addAction(action);
-                movePlan.addScore(value);
+                movePlan.addScore(current.getValue() != value ? value : 0);
                 movePlan.setChanged(true);
 
                 // Change the tile array copy

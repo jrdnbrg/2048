@@ -21,8 +21,6 @@ public class TileLabel extends JLabel {
         setOpaque(false);
         setHorizontalAlignment(SwingConstants.CENTER);
         setVerticalAlignment(SwingConstants.CENTER);
-
-        
     }
 
     

@@ -23,19 +23,33 @@ public class Controller {
         this.view = view;
     }
 
+    public Tile[][] getGrid() {
+        return model.getGridCopy();
+    }
+
     public void startGame() {
-        view.implementMove(model.initialize());
-        view.setScore(0);
+        view.implementMoves(model.initialize());
     }
 
     public void onKeyPressed(KeyEvent e) {
-        Direction dir = switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT -> Direction.LEFT;
-            case KeyEvent.VK_RIGHT -> Direction.RIGHT;
-            case KeyEvent.VK_UP -> Direction.UP;
-            case KeyEvent.VK_DOWN -> Direction.DOWN;
-            default -> null;
-        };
+        
+        Direction dir = null;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT:
+                dir = Direction.LEFT;
+                break;
+            case KeyEvent.VK_RIGHT:
+                dir = Direction.RIGHT;
+                break;
+            case KeyEvent.VK_UP:
+                dir = Direction.UP;
+                break;
+            case KeyEvent.VK_DOWN:
+                dir = Direction.DOWN;
+                break;
+            default:
+                break;
+        }
 
         if (dir != null && canMakeMove) {
             handleMove(dir);
@@ -51,12 +65,12 @@ public class Controller {
             return;
         }
 
-        view.implementMove(movePlan);
+        view.implementMoves(movePlan);
     }
 
     public void applyMoveAfterAnimation(MovePlan movePlan) {
         model.applyMove(movePlan);
-        view.updateBoard();
+        view.repaint();
         view.setScore(model.getScore());
         checkGameOver();
         canMakeMove = true;
@@ -65,7 +79,15 @@ public class Controller {
     public void checkGameOver() {
         if (!model.canMove()) {
             canMakeMove = false;
-            view.gameOverScreen();
+            //view.gameOverScreen();
+            restart();
         }
+    }
+
+    public void restart() {
+        view.implementMoves(model.initialize());
+        model.setScore(0);
+        view.setScore(0);
+        canMakeMove = true;
     }
 }

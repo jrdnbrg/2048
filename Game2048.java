@@ -1,6 +1,7 @@
 import javax.swing.*;
 import Controller.*;
 import Model.*;
+import Model.Direction;
 import View.*;
 
 public class Game2048 {
@@ -12,8 +13,10 @@ public class Game2048 {
         
         JFrame frame = new JFrame("2048"); 
         frame.add(view);
-        frame.pack();
+        frame.setSize(600, 600);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         view.requestFocusInWindow();
 

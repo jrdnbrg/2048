@@ -2,18 +2,19 @@ package View;
 
 import javax.imageio.plugins.jpeg.JPEGImageReadParam;
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.GroupLayout.Alignment;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-import Model.*; //to import the model class
+import Controller.*; //to import the model class
+import Model.*;
 
-public class GridViewer extends JFrame  {
+public class GridViewer extends JPanel {
     TileLabel[][] tiles = new TileLabel[SIZE][SIZE];
     private JButton scoreButton;
     
@@ -22,32 +23,31 @@ public class GridViewer extends JFrame  {
     private static final int GAP = 10;
     private static final int SIZE = 4;
    
-    private Model model;
+    private Controller controller;
     private Random random = new Random();
     
 
     //constructor
-    public GridViewer(Model model) {
-        this.model = model;
-
-        //setup frame
-        setTitle("2048 Game");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 600);
-        setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(0xfaf8ef));
-        setResizable(false);
+    public GridViewer(Controller controller) {
+        this.controller = controller;
 
         buildGrid();
         buildTopPanel();
 
-        setLocationRelativeTo(null);
-        updateBoard(model.getTileArray());
+        setFocusable(true);
+        requestFocusInWindow();
 
-        setVisible(true);
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                controller.onKeyPressed(e);
+            }
+        });
     }
 
     public void buildGrid() {
+        setBackground(new Color(0xfaf8ef));
+        setLayout(new BorderLayout());
 
         Font tileFont = new Font("Arial", Font.BOLD, 32);
 
@@ -105,7 +105,7 @@ public class GridViewer extends JFrame  {
      */
     public void buildTopPanel() {
         scoreButton = new JButton();
-        scoreButton.setText("score : " + model.getScore());
+        scoreButton.setText("score : 0");
         scoreButton.setBounds(20,20,100,50);
         scoreButton.setFocusable(false);
 
@@ -117,12 +117,7 @@ public class GridViewer extends JFrame  {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == newGameButton) {
-                    dispose();
-                    Model newModel = new Model();
-                    MovePlan spawnPlan = newModel.initialize();
-                    GridViewer newViewer = new GridViewer(newModel);
-                    newViewer.implementMoves(spawnPlan);
-                    
+                    controller.restart();
                 }
             }
             
@@ -139,9 +134,9 @@ public class GridViewer extends JFrame  {
 
     }
 
-    public void updateScore() {
-    scoreButton.setText("score : " + model.getScore());
- }
+    public void setScore(int score) {
+        scoreButton.setText("score : " + score);
+    }
 
     public int getTileX(int col) {
         return MARGIN + col * (TILE_SIZE + GAP);
@@ -174,7 +169,7 @@ public class GridViewer extends JFrame  {
     
 
     public void implementMoves(MovePlan movePlan) {
-        java.util.List<MoveAction> actions = movePlan.getActions();
+        ArrayList<MoveAction> actions = movePlan.getActions();
         if (actions.isEmpty()) return;
 
         Timer timer = new Timer(15, null);
@@ -208,9 +203,8 @@ public class GridViewer extends JFrame  {
                 if (step >= steps) {
                     ((Timer)e.getSource()).stop();
                     // Commit final positions
-                    model.applyMove(movePlan);
-                    updateBoard(model.getTileArray());
-                    updateScore();
+                    controller.applyMoveAfterAnimation(movePlan);
+                    updateBoard(controller.getGrid());
                 }
             }
         });
@@ -238,23 +232,6 @@ public class GridViewer extends JFrame  {
 
     //for testing 
     public static void main(String[] args) {
-        Model model = new Model();
-        MovePlan spawnPlan = model.initialize(); // spawn initial tiles
-        GridViewer gridViewer = new GridViewer(model);
-
-        // Animate the initial tiles
-        gridViewer.implementMoves(spawnPlan);
-
-        // Optional: simulate a move for testing
-        new Timer(1000, e -> {
-            //MovePlan movePlan = model.computeMove(Direction.RIGHT);
-            MovePlan movePlan = model.computeMove(Direction.LEFT);
-            model.applyMove(movePlan);
-            gridViewer.implementMoves(movePlan);
-        }).start();
-
-        
-
         
     }
 
