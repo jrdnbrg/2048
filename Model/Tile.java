@@ -3,9 +3,9 @@ package Model;
 import java.util.UUID;
 
 public class Tile {
-    private int value; //0 means empty
-    private String id; 
-    private boolean merged; //to check if the tile is merged or no
+    public int value; //0 means empty
+    public String id; 
+    public boolean merged; //to check if the tile is merged or no
 
     //constructor
     public Tile(String id) {
@@ -32,7 +32,7 @@ public class Tile {
     }
 
     //to return the current value
-    int getValue() {
+    public int getValue() {
         return value;
     }
 
