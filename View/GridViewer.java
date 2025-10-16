@@ -292,8 +292,6 @@ public class GridViewer extends JFrame  {
                 
             }
         }
-
-    
     }
 
     
