@@ -14,14 +14,18 @@ import javax.swing.SwingConstants;
 
 public class TileLabel extends JLabel {
     private int arc = 25;
+    
 
     public TileLabel(String text) {
         super(text, SwingConstants.CENTER);
         setOpaque(false);
         setHorizontalAlignment(SwingConstants.CENTER);
         setVerticalAlignment(SwingConstants.CENTER);
+
         
     }
+
+    
     /*
      * For creating rounded tilelabels 
      */
@@ -33,7 +37,7 @@ public class TileLabel extends JLabel {
 
         // rounded background
         g2.setColor(getBackground());
-        g2.fillRoundRect(0, 0, 80, 79, arc, arc);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
         g2.dispose();
 
         // draw text
