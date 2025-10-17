@@ -3,15 +3,12 @@ package View;
 import javax.imageio.plugins.jpeg.JPEGImageReadParam;
 import javax.swing.*;
 import javax.swing.Timer;
-import javax.swing.GroupLayout.Alignment;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.*;
 
-import Controller.*; //to import the model class
+import Controller.*;
 import Model.*;
 
 public class GridViewer extends JPanel {
@@ -24,10 +21,7 @@ public class GridViewer extends JPanel {
     private static final int SIZE = 4;
    
     private Controller controller;
-    private Random random = new Random();
     
-
-    //constructor
     public GridViewer(Controller controller) {
         this.controller = controller;
 
@@ -45,22 +39,25 @@ public class GridViewer extends JPanel {
         });
     }
 
+    /**
+     * To build the grid and have it in the center of the frame.
+     */
     public void buildGrid() {
         setBackground(new Color(0xfaf8ef));
         setLayout(new BorderLayout());
 
         Font tileFont = new Font("Arial", Font.BOLD, 32);
 
-        /*LayeredPanes for creating layers 
-        *firt for the fixed grid and second for the tiles
-        */
+        //LayeredPanes for creating layers
+        //firt for the fixed grid and second for the tiles
+        
         JLayeredPane layeredPane = new JLayeredPane();
-        layeredPane.setPreferredSize(new Dimension(450,450));
+        layeredPane.setPreferredSize(new Dimension(450, 450));
         layeredPane.setBackground(new Color(0xbbada0));
         layeredPane.setOpaque(true);
 
         //Background grid(fixed tiles)
-        JPanel backgroundGrid = new JPanel(new GridLayout(SIZE,SIZE,GAP,GAP));
+        JPanel backgroundGrid = new JPanel(new GridLayout(SIZE, SIZE, GAP, GAP));
         backgroundGrid.setBackground(new Color(0xbbada0));
         backgroundGrid.setBounds(10, 10, (TILE_SIZE + GAP) * SIZE - GAP, 
             (TILE_SIZE + GAP) * SIZE - GAP);
@@ -100,17 +97,17 @@ public class GridViewer extends JPanel {
         add(setter, BorderLayout.CENTER);
     }
 
-    /*
-     * 
+    /**
+     * to build a panel containing the "new game" button and score label.
      */
     public void buildTopPanel() {
         scoreButton = new JButton();
         scoreButton.setText("score : 0");
-        scoreButton.setBounds(20,20,100,50);
+        scoreButton.setBounds(20, 20, 100, 50);
         scoreButton.setFocusable(false);
 
         JButton newGameButton = new JButton("New Game");
-        newGameButton.setBounds(20,20,100,50);
+        newGameButton.setBounds(20, 20, 100, 50);
         newGameButton.setFocusable(false);
         newGameButton.addActionListener(new ActionListener() {
 
@@ -152,14 +149,11 @@ public class GridViewer extends JPanel {
                 int value = grid[r][c].getValue();
                 TileLabel tile = tiles[r][c];
                 if (value == 0) {
-                    tiles[r][c].setText("");
-                    tiles[r][c].setBackground(new Color(0xf9d8e2));
-                    //tiles[r][c].setVisible(false);
-                }
-                else {
-                    //tiles[r][c].setVisible(true);
-                    tiles[r][c].setText(String.valueOf(value));
-                    tiles[r][c].setBackground(getTileColor(value));
+                    tile.setText("");
+                    tile.setBackground(new Color(0xf9d8e2));
+                } else {
+                    tile.setText(String.valueOf(value));
+                    tile.setBackground(getTileColor(value));
                 }
                 tile.setBounds(getTileX(c), getTileY(r), TILE_SIZE, TILE_SIZE);
             }
@@ -211,8 +205,7 @@ public class GridViewer extends JPanel {
         timer.start();
     }
 
-    //setting the color of tile based on the value
-    
+    //setting the color of tile based on the value 
     private Color getTileColor(int value) {
         switch (value) {
             case 2: return new Color(0xffe4ec);
@@ -229,12 +222,4 @@ public class GridViewer extends JPanel {
             default: return new Color(0xf9d8e2);
         }
     }
-
-    //for testing 
-    public static void main(String[] args) {
-        
-    }
-
-
-
 }
