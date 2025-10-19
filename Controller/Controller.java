@@ -16,7 +16,7 @@ public class Controller {
 
     public Controller(Model model) {
         this.model = model;
-        canMakeMove = true;
+        canMakeMove = false;
     }
 
     public void setView(GridViewer view) {
@@ -28,7 +28,17 @@ public class Controller {
     }
 
     public void startGame() {
+        //Clear the view panel
+        view.removeAll();
+        view.revalidate();
+        view.repaint();
+
+        //Show the main game screen and initialize the grid
+        view.buildGrid();
+        view.buildTopPanel();
         view.implementMoves(model.initialize());
+        view.repaint();
+        canMakeMove = true; 
     }
 
     public void onKeyPressed(KeyEvent e) {
@@ -79,15 +89,17 @@ public class Controller {
     public void checkGameOver() {
         if (!model.canMove()) {
             canMakeMove = false;
+            view.removeAll();
+            view.revalidate();
+            view.repaint();
             //view.gameOverScreen();
-            restart();
         }
     }
 
     public void restart() {
-        view.implementMoves(model.initialize());
         model.setScore(0);
         view.setScore(0);
+        startGame();
         canMakeMove = true;
     }
 }

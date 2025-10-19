@@ -18,8 +18,5 @@ public class Game2048 {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        view.requestFocusInWindow();
-
-        controller.startGame();
     } 
 }

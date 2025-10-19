@@ -24,9 +24,9 @@ public class GridViewer extends JPanel {
     
     public GridViewer(Controller controller) {
         this.controller = controller;
-
-        buildGrid();
-        buildTopPanel();
+        
+        setLayout(new BorderLayout());
+        add(new StartScreen(controller), BorderLayout.CENTER);
 
         setFocusable(true);
         requestFocusInWindow();
@@ -224,7 +224,7 @@ public class GridViewer extends JPanel {
         switch (v) {
             case 2: return new Color(255, 170, 187);
             case 4: return new Color(238,136,102);
-            case 8: return new Color(238,221,13);
+            case 8: return new Color(238,221,136);
             case 16: return new Color(170,170,0);
             case 32: return new Color(187,204,51);
             case 64: return new Color(68,187,153);
