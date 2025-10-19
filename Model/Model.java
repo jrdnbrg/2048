@@ -37,12 +37,10 @@ public class Model {
      * Initialize the grid.
      */
     public MovePlan initialize() {
-        String id;
 
         // Add tiles to the grid
         for (int r = 0; r < GRID_SIZE; r++) {
             for (int c = 0; c < GRID_SIZE; c++) {
-                id = UUID.randomUUID().toString();
                 Tile tile = new Tile(UUID.randomUUID().toString());
                 tileArray[r][c] = tile;
             }
@@ -59,13 +57,13 @@ public class Model {
     }
 
     /**
-     * Spawn a tile with value 2 at a random position in the grid.
+     * Spawn a tile with value 2 or 4 at a random position in the grid.
      */
     public MoveAction spawnRandomTile(Tile[][] tileArray) {
         // Spawn a tile
         var emptyTiles = getEmptyTiles(tileArray);
         Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
-        randomTile.setValue(random.nextFloat() < 0.9 ? 2 : 4);
+        randomTile.setValue(emptyTiles.size() > 14 ? 2 : random.nextFloat() < 0.9 ? 2 : 4);
 
         // Make move action for spawning a tile
         Point position = getGridPosition(randomTile);
