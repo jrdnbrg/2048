@@ -43,7 +43,7 @@ public class GridViewer extends JPanel {
      * To build the grid and have it in the center of the frame.
      */
     public void buildGrid() {
-        setBackground(new Color(0xfaf8ef));
+        setBackground(new Color(255, 255, 255));
         setLayout(new BorderLayout());
 
         Font tileFont = new Font("Arial", Font.BOLD, 32);
@@ -53,18 +53,18 @@ public class GridViewer extends JPanel {
         
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(450, 450));
-        layeredPane.setBackground(new Color(0xbbada0));
+        layeredPane.setBackground(new Color(221, 221, 221));
         layeredPane.setOpaque(true);
 
         //Background grid(fixed tiles)
         JPanel backgroundGrid = new JPanel(new GridLayout(SIZE, SIZE, GAP, GAP));
-        backgroundGrid.setBackground(new Color(0xbbada0));
+        backgroundGrid.setBackground(new Color(221, 221, 221));
         backgroundGrid.setBounds(10, 10, (TILE_SIZE + GAP) * SIZE - GAP, 
             (TILE_SIZE + GAP) * SIZE - GAP);
         
         for (int i = 0; i < SIZE * SIZE; i++) {
             JPanel cell = new JPanel();
-            cell.setBackground(new Color(0xf9d8e2));
+            cell.setBackground(new Color(255, 255, 255));
             backgroundGrid.add(cell);
         }
 
@@ -77,7 +77,7 @@ public class GridViewer extends JPanel {
                 
                 TileLabel tile = new TileLabel("");
                 tile.setOpaque(true);
-                tile.setBackground(new Color(0xf9d8e2));
+                tile.setBackground(new Color(255, 255, 255));
                 tile.setForeground(Color.DARK_GRAY);
                 tile.setFont(tileFont);
                 tile.setBounds(getTileX(c), getTileY(r), TILE_SIZE, TILE_SIZE);
@@ -91,7 +91,7 @@ public class GridViewer extends JPanel {
         //To get the grid in the center of the frame
         JPanel setter = new JPanel();
         setter.setLayout(new GridBagLayout());
-        setter.setBackground(new Color(0xfaf8ef));
+        setter.setBackground(new Color(250, 248, 239));
         setter.add(layeredPane, new GridBagConstraints()); 
 
         add(setter, BorderLayout.CENTER);
@@ -123,7 +123,7 @@ public class GridViewer extends JPanel {
         //panel to store button
         JPanel topPanel = new JPanel(new BorderLayout() );
         topPanel.setAlignmentY(10); 
-        topPanel.setBackground(new Color(0xfaf8ef)); // match window bg
+        topPanel.setBackground(new Color(250, 248, 239)); // match window bg
         topPanel.setPreferredSize(new Dimension(10, 50));
         topPanel.add(newGameButton, BorderLayout.WEST); // add button to panel
         topPanel.add(scoreButton, BorderLayout.EAST);
@@ -150,7 +150,7 @@ public class GridViewer extends JPanel {
                 TileLabel tile = tiles[r][c];
                 if (value == 0) {
                     tile.setText("");
-                    tile.setBackground(new Color(0xf9d8e2));
+                    tile.setBackground(new Color(255, 255, 255));
                 } else {
                     tile.setText(String.valueOf(value));
                     tile.setBackground(getTileColor(value));
@@ -205,21 +205,32 @@ public class GridViewer extends JPanel {
         timer.start();
     }
 
-    //setting the color of tile based on the value 
+    /**
+     * Get the color of a tile based on the value.
+     * 
+     * The colors are from the light qualitative colour scheme made by Paul Tol to be color-blind friendly.
+     * Tol, P. (2021). Colour schemes (SRON/EPS/TN/09-002, Issue 3.2). SRON Netherlands Institute for Space Research.
+     * https://sronpersonalpages.nl/~pault/data/colourschemes.pdf
+     * 
+     * @param value of a tile
+     * @return color of tile
+     */
     private Color getTileColor(int value) {
-        switch (value) {
-            case 2: return new Color(0xffe4ec);
-            case 4: return new Color(0xf9c6d2);
-            case 8: return new Color(0xf7a6ba);
-            case 16: return new Color(0xf284ac);
-            case 32: return new Color(0xef639b);
-            case 64: return new Color(0xeb4b92);
-            case 128: return new Color(0xe33680);
-            case 256: return new Color(0xcc2b70);
-            case 512: return new Color(0xb02064);
-            case 1024: return new Color(0x8d1755);
-            case 2048: return new Color(0x6b0f47);
-            default: return new Color(0xf9d8e2);
+        int v = value;
+        while (v > 256) {
+            v /= 256;
+        }
+
+        switch (v) {
+            case 2: return new Color(255, 170, 187);
+            case 4: return new Color(238,136,102);
+            case 8: return new Color(238,221,13);
+            case 16: return new Color(170,170,0);
+            case 32: return new Color(187,204,51);
+            case 64: return new Color(68,187,153);
+            case 128: return new Color(153,221,255);
+            case 256: return new Color(119,170,221);
+            default: return new Color(221,221,221);
         }
     }
 }
