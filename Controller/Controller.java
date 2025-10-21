@@ -89,6 +89,8 @@ public class Controller {
     public void checkGameOver() {
         if (!model.canMove()) {
             canMakeMove = false;
+            model.setBestScore();
+            view.setBestScore(model.getBestScore());
             view.removeAll();
             view.revalidate();
             view.repaint();

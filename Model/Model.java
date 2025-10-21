@@ -11,6 +11,7 @@ public class Model {
     private Random random;
     private Tile[][] tileArray;
     private int score;
+    private int bestScore;
 
     /**
      * Constructor.
@@ -19,6 +20,7 @@ public class Model {
         random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
         score = 0;
+        bestScore = 0;
     }
 
     public Tile[][] getTileArray() {
@@ -31,6 +33,14 @@ public class Model {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public int getBestScore() {
+        return bestScore;
+    }
+
+    public void setBestScore() {
+        bestScore = score > bestScore ? score : bestScore;
     }
     
     /**
