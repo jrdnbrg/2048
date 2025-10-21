@@ -1,7 +1,5 @@
 package Model;
 
-import java.util.UUID;
-
 public class Tile {
     public int value; //0 means empty
     public String id; 

@@ -1,7 +1,6 @@
 import javax.swing.*;
 import Controller.*;
 import Model.*;
-import Model.Direction;
 import View.*;
 
 public class Game2048 {

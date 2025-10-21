@@ -1,6 +1,5 @@
 package View;
 
-import javax.imageio.plugins.jpeg.JPEGImageReadParam;
 import javax.swing.*;
 import javax.swing.Timer;
 

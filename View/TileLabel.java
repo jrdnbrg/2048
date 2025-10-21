@@ -1,16 +1,7 @@
 package View;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.lang.runtime.SwitchBootstraps;
-
-import javax.imageio.plugins.jpeg.JPEGHuffmanTable;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
+import java.awt.*;
+import javax.swing.*;
 
 public class TileLabel extends JLabel {
     private int arc = 25;
