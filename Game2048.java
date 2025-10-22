@@ -9,6 +9,7 @@ public class Game2048 {
         Controller controller = new Controller(model);
         GridViewer view = new GridViewer(controller);
         controller.setView(view);
+
         
         JFrame frame = new JFrame("2048"); 
         frame.add(view);
@@ -16,6 +17,8 @@ public class Game2048 {
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
+        ImageIcon image = new ImageIcon("2048.png"); //create an image icon 
+        frame.setIconImage(image.getImage());
         frame.setVisible(true);
     } 
 }

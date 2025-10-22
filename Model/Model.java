@@ -8,6 +8,7 @@ import java.util.*;
  */
 public class Model {
     private static final int GRID_SIZE = 4;
+    public static Object getBestScore;
     private Random random;
     private Tile[][] tileArray;
     private int score;

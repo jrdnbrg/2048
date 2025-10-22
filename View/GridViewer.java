@@ -12,7 +12,7 @@ import Model.*;
 
 public class GridViewer extends JPanel {
     TileLabel[][] tiles = new TileLabel[SIZE][SIZE];
-    private JButton scoreButton;
+    private JLabel scoreLabel;
     private JLabel bestScoreLabel;
     
     private static final int MARGIN = 10;
@@ -97,26 +97,36 @@ public class GridViewer extends JPanel {
         add(setter, BorderLayout.CENTER);
     }
 
+
     /**
      * to build a panel containing the "new game" button and score label.
      */
     public void buildTopPanel() {
-        JPanel scorePanel = new JPanel();
+        JPanel scorePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10,5));
+        scorePanel.setOpaque(false);
 
-        scoreButton = new JButton();
-        scoreButton.setText("score : 0");
-        scoreButton.setBounds(20, 20, 100, 50);
-        scoreButton.setFocusable(false);
+        Font scoreFont = new Font("Arial", Font.BOLD, 17);
+
+        scoreLabel = new JLabel();
+        scoreLabel.setText("Score : 0");
+        scoreLabel.setFont(scoreFont);
+        scoreLabel.setFocusable(false);
 
         bestScoreLabel = new JLabel();
-        bestScoreLabel.setText("best score : 0");
+        bestScoreLabel.setFont(scoreFont);
+        bestScoreLabel.setText("Best score : 0");
 
         scorePanel.add(bestScoreLabel);
-        scorePanel.add(scoreButton);
+        scorePanel.add(scoreLabel);
 
+        
         JButton newGameButton = new JButton("New Game");
-        newGameButton.setBounds(20, 20, 100, 50);
+        newGameButton.setFont(new Font("Arial", Font.BOLD, 17));
         newGameButton.setFocusable(false);
+        newGameButton.setBackground(new Color(119, 170, 221));
+        newGameButton.setForeground(Color.WHITE);
+        newGameButton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        //newGameButton.setBorder(BorderFactory.createLineBorder(new Color(0X1b4b9d),4));
         newGameButton.addActionListener(new ActionListener() {
 
             @Override
@@ -129,10 +139,12 @@ public class GridViewer extends JPanel {
         });
 
         //panel to store button
-        JPanel topPanel = new JPanel(new BorderLayout() );
-        topPanel.setAlignmentY(10); 
+        JPanel topPanel = new JPanel(new BorderLayout());
+        //topPanel.setAlignmentY(10); 
         topPanel.setBackground(new Color(250, 248, 239)); // match window bg
-        topPanel.setPreferredSize(new Dimension(10, 50));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20)); 
+        //topPanel.setPreferredSize(new Dimension(10, 50));
+        //topPanel.setBounds(0,50,600,60);
         topPanel.add(newGameButton, BorderLayout.WEST); // add button to panel
         topPanel.add(scorePanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
@@ -140,7 +152,7 @@ public class GridViewer extends JPanel {
     }
 
     public void setScore(int score) {
-        scoreButton.setText("score : " + score);
+        scoreLabel.setText("Score : " + score);
     }
 
     public void setBestScore(int bestScore) {
@@ -215,6 +227,11 @@ public class GridViewer extends JPanel {
             }
         });
         timer.start();
+    }
+
+     public void gameOverScreen() {
+        GameOverScreen gameOverScreen = new GameOverScreen(controller);
+        add(gameOverScreen);
     }
 
     /**

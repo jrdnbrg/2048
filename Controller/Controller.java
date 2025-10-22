@@ -85,6 +85,10 @@ public class Controller {
         canMakeMove = true;
     } 
 
+    
+
+
+
     public void checkGameOver() {
         if (!model.canMove()) {
             canMakeMove = false;
@@ -93,7 +97,7 @@ public class Controller {
             view.removeAll();
             view.revalidate();
             view.repaint();
-            //view.gameOverScreen();
+            view.gameOverScreen();
         }
     }
 
