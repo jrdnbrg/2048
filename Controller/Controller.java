@@ -26,6 +26,10 @@ public class Controller {
         return model.getGridCopy();
     }
 
+    public int getScore() {
+        return model.getScore();
+    }
+
     public void startGame() {
         //Clear the view panel
         view.removeAll();
@@ -35,6 +39,7 @@ public class Controller {
         //Show the main game screen and initialize the grid
         view.buildGrid();
         view.buildTopPanel();
+        view.setBestScore(model.getBestScore());
         view.implementMoves(model.initialize());
         view.repaint();
         canMakeMove = true; 
@@ -84,10 +89,6 @@ public class Controller {
         checkGameOver();
         canMakeMove = true;
     } 
-
-
-
-
 
     public void checkGameOver() {
         if (!model.canMove()) {

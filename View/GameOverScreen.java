@@ -1,5 +1,4 @@
 package View;
-import Model.*;
 import Controller.Controller;
 import java.awt.*;
 import javax.swing.*;
@@ -23,7 +22,7 @@ public class GameOverScreen extends JPanel {
         scorePanel.setOpaque(false);
 
         scoreViewer = new JLabel();
-        scoreViewer.setText("Score : " + 0 );
+        scoreViewer.setText("Score : " + controller.getScore());
         scoreViewer.setBounds(250,250,50,80);
         scoreViewer.setFont(new Font("Arial", Font.BOLD, 24));
 
@@ -42,7 +41,7 @@ public class GameOverScreen extends JPanel {
         startAgain.setBackground(new Color(119, 170, 221));
         startAgain.setOpaque(true);
         startAgain.setFocusable(false);
-        startAgain.addActionListener(e -> controller.startGame());
+        startAgain.addActionListener(e -> controller.restart());
 
         scorePanel.add(scoreViewer, BorderLayout.NORTH);
         buttonPanel.add(startAgain, BorderLayout.CENTER);
@@ -51,12 +50,6 @@ public class GameOverScreen extends JPanel {
         add(layeredPane);
 
 
-    }
-
-    public void setScore(int score) {
-        scoreViewer.setText("score : " + score);
-    }
-
-    
+    }    
 }
 
