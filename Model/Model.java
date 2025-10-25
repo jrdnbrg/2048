@@ -1,22 +1,20 @@
 package Model;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * Object that stores the grid of the game.
  */
 public class Model {
     private static final int GRID_SIZE = 4;
-    public static Object getBestScore;
     private Random random;
     private Tile[][] tileArray;
     private int score;
     private int bestScore;
 
-    /**
-     * Constructor.
-     */
     public Model() {
         random = new Random();
         tileArray = new Tile[GRID_SIZE][GRID_SIZE];
@@ -67,16 +65,14 @@ public class Model {
         return movePlan;
     }
 
-    /**
-     * Spawn a tile with value 2 or 4 at a random position in the grid.
-     */
     public MoveAction spawnRandomTile(Tile[][] tileArray) {
-        // Spawn a tile
+        
+        // Spawn a tile with value 2 or 4 at a random position in the grid.
         var emptyTiles = getEmptyTiles(tileArray);
         Tile randomTile = emptyTiles.get(random.nextInt(emptyTiles.size()));
         randomTile.setValue(emptyTiles.size() > 14 ? 2 : random.nextFloat() < 0.9 ? 2 : 4);
 
-        // Make move action for spawning a tile
+        // Make a move action for spawning a tile
         Point position = getGridPosition(randomTile);
         int row = (int) position.getX();
         int col = (int) position.getY();
@@ -279,53 +275,5 @@ public class Model {
             }
         }
         return false;
-    }
-    
-    // For testing purposes
-    @Override
-    public String toString() {
-        String str = "";
-        for (int r = 0; r < GRID_SIZE; r++) {
-            for (int c = 0; c < GRID_SIZE; c++) {
-                str += tileArray[r][c].getValue() + " ";
-            }
-            str += "\n";
-        }
-        return str;
-    }
-
-    public void testGrid() {
-        tileArray[0][0].setValue(4);
-        tileArray[0][1].setValue(8);
-        tileArray[0][2].setValue(4);
-        tileArray[0][3].setValue(2);
-
-        tileArray[1][0].setValue(8);
-        tileArray[1][1].setValue(16);
-        tileArray[1][2].setValue(8);
-        tileArray[1][3].setValue(16);
-
-        tileArray[2][0].setValue(4);
-        tileArray[2][1].setValue(2);
-        tileArray[2][2].setValue(64);
-        tileArray[2][3].setValue(4);
-
-        tileArray[3][0].setValue(2);
-        tileArray[3][1].setValue(16);
-        tileArray[3][2].setValue(4);
-        tileArray[3][3].setValue(2);
-    }
-
-    public static void main(String[] args) {
-        var grid = new Model();
-        grid.applyMove(grid.initialize());
-        System.out.println(grid);
-
-        while (grid.canMove()) {
-            for (Direction dir : Direction.values()) {
-                grid.applyMove(grid.computeMove(dir));
-                System.out.println(grid);
-            }
-        }
     }
 }

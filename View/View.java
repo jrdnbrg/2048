@@ -1,16 +1,33 @@
 package View;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
-import Controller.*;
+import Controller.Controller;
 import Model.*;
 
-public class GridViewer extends JPanel {
+/**
+ * Displays everything on the screen.
+ */
+public class View extends JPanel {
     TileLabel[][] tiles = new TileLabel[SIZE][SIZE];
     private JLabel scoreLabel;
     private JLabel bestScoreLabel;
@@ -22,9 +39,10 @@ public class GridViewer extends JPanel {
    
     private Controller controller;
     
-    public GridViewer(Controller controller) {
+    public View(Controller controller) {
         this.controller = controller;
         
+        // Display the start screen
         setLayout(new BorderLayout());
         add(new StartScreen(controller), BorderLayout.CENTER);
 
@@ -40,7 +58,7 @@ public class GridViewer extends JPanel {
     }
 
     /**
-     * To build the grid and have it in the center of the frame.
+     * Builds the grid in the center of the screen.
      */
     public void buildGrid() {
         setBackground(new Color(255, 255, 255));
@@ -48,47 +66,40 @@ public class GridViewer extends JPanel {
 
         Font tileFont = new Font("Arial", Font.BOLD, 32);
 
-        //LayeredPanes for creating layers
-        //firt for the fixed grid and second for the tiles
-        
+        // Make a layered pane
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(450, 450));
         layeredPane.setBackground(new Color(221, 221, 221));
         layeredPane.setOpaque(true);
 
-        //Background grid(fixed tiles)
+        // Make the grid
         JPanel backgroundGrid = new JPanel(new GridLayout(SIZE, SIZE, GAP, GAP));
         backgroundGrid.setBackground(new Color(221, 221, 221));
-        backgroundGrid.setBounds(10, 10, (TILE_SIZE + GAP) * SIZE - GAP, 
-            (TILE_SIZE + GAP) * SIZE - GAP);
-        
+        backgroundGrid.setBounds(10, 10, (TILE_SIZE + GAP) * SIZE - GAP, (TILE_SIZE + GAP) * SIZE - GAP);
         for (int i = 0; i < SIZE * SIZE; i++) {
             JPanel cell = new JPanel();
             cell.setBackground(new Color(255, 255, 255));
             backgroundGrid.add(cell);
         }
 
-        //Adding the fixed grid add back layer 
+        // Add the grid to the layeredPane 
         layeredPane.add(backgroundGrid, JLayeredPane.DEFAULT_LAYER);
 
-        //for initializing the gridtiles
+        // Initialize the grid tiles
         for (int r = 0; r < SIZE; r++) {
             for (int c = 0; c < SIZE; c++) {
-                
                 TileLabel tile = new TileLabel("");
                 tile.setOpaque(true);
                 tile.setBackground(new Color(255, 255, 255));
                 tile.setForeground(Color.DARK_GRAY);
                 tile.setFont(tileFont);
                 tile.setBounds(getTileX(c), getTileY(r), TILE_SIZE, TILE_SIZE);
-                //tile.setVisible(false);
                 tiles[r][c] = tile;
-                layeredPane.add(tile, JLayeredPane.PALETTE_LAYER); //top layer
+                layeredPane.add(tile, JLayeredPane.PALETTE_LAYER);
             }
         }
 
-
-        //To get the grid in the center of the frame
+        // Set the grid in the center of the frame
         JPanel setter = new JPanel();
         setter.setLayout(new GridBagLayout());
         setter.setBackground(new Color(250, 248, 239));
@@ -97,21 +108,23 @@ public class GridViewer extends JPanel {
         add(setter, BorderLayout.CENTER);
     }
 
-
     /**
-     * to build a panel containing the "new game" button and score label.
+     * Builds a panel containing the "new game" button, the score label and the best score label.
      */
     public void buildTopPanel() {
+        Font scoreFont = new Font("Arial", Font.BOLD, 17);
+
+        // Make a score panel
         JPanel scorePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10,5));
         scorePanel.setOpaque(false);
 
-        Font scoreFont = new Font("Arial", Font.BOLD, 17);
-
+        // Make a score label
         scoreLabel = new JLabel();
         scoreLabel.setText("Score : 0");
         scoreLabel.setFont(scoreFont);
         scoreLabel.setFocusable(false);
 
+        // Make a best score label
         bestScoreLabel = new JLabel();
         bestScoreLabel.setFont(scoreFont);
         bestScoreLabel.setText("Best score : 0");
@@ -119,36 +132,22 @@ public class GridViewer extends JPanel {
         scorePanel.add(bestScoreLabel);
         scorePanel.add(scoreLabel);
 
-        
+        // Make a new game button
         JButton newGameButton = new JButton("New Game");
         newGameButton.setFont(new Font("Arial", Font.BOLD, 17));
         newGameButton.setFocusable(false);
         newGameButton.setBackground(new Color(119, 170, 221));
         newGameButton.setForeground(Color.WHITE);
         newGameButton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        //newGameButton.setBorder(BorderFactory.createLineBorder(new Color(0X1b4b9d),4));
-        newGameButton.addActionListener(new ActionListener() {
+        newGameButton.addActionListener(e -> controller.restart());
 
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getSource() == newGameButton) {
-                    controller.restart();
-                }
-            }
-            
-        });
-
-        //panel to store button
+        // Make a top panel and add it to the screen above the grid
         JPanel topPanel = new JPanel(new BorderLayout());
-        //topPanel.setAlignmentY(10); 
-        topPanel.setBackground(new Color(250, 248, 239)); // match window bg
+        topPanel.setBackground(new Color(250, 248, 239));
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 20)); 
-        //topPanel.setPreferredSize(new Dimension(10, 50));
-        //topPanel.setBounds(0,50,600,60);
-        topPanel.add(newGameButton, BorderLayout.WEST); // add button to panel
+        topPanel.add(newGameButton, BorderLayout.WEST);
         topPanel.add(scorePanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
-
     }
 
     public void setScore(int score) {
@@ -184,8 +183,6 @@ public class GridViewer extends JPanel {
         }
     }
 
-    
-
     public void implementMoves(MovePlan movePlan) {
         ArrayList<MoveAction> actions = movePlan.getActions();
         if (actions.isEmpty()) return;
@@ -198,6 +195,7 @@ public class GridViewer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 step++;
+
                 for (MoveAction action : actions) {
                     TileLabel tile = tiles[action.getStartRow()][action.getStartCol()];
 
@@ -209,12 +207,10 @@ public class GridViewer extends JPanel {
                         int newX = startX + (endX - startX) * step / steps;
                         int newY = startY + (endY - startY) * step / steps;
                         tile.setBounds(newX, newY, TILE_SIZE, TILE_SIZE);
-
                     } else if (action.isSpawn()) {
                         TileLabel spawnTile = tiles[action.getEndRow()][action.getEndCol()];
                         spawnTile.setText(String.valueOf(action.getNewValue()));
                         spawnTile.setBackground(getTileColor(action.getNewValue()));
-                       
                     }
                 }
 
@@ -226,10 +222,14 @@ public class GridViewer extends JPanel {
                 }
             }
         });
+
         timer.start();
     }
 
-     public void gameOverScreen() {
+    /**
+     * Show the game over screen.
+     */
+    public void gameOverScreen() {
         GameOverScreen gameOverScreen = new GameOverScreen(controller);
         add(gameOverScreen);
     }
@@ -262,8 +262,4 @@ public class GridViewer extends JPanel {
             default: return new Color(221,221,221);
         }
     }
-
-    //public void gameOverScreen() {
-        //add(new EndScreen(controller), BorderLayout.CENTER);
-    //}
 }

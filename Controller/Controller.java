@@ -10,7 +10,7 @@ import View.*;
  */
 public class Controller {
     private Model model;
-    private GridViewer view;
+    private View view;
     private boolean canMakeMove;
 
     public Controller(Model model) {
@@ -18,7 +18,7 @@ public class Controller {
         canMakeMove = false;
     }
 
-    public void setView(GridViewer view) {
+    public void setView(View view) {
         this.view = view;
     }
 
@@ -31,12 +31,12 @@ public class Controller {
     }
 
     public void startGame() {
-        //Clear the view panel
+        // Clear the view panel
         view.removeAll();
         view.revalidate();
         view.repaint();
 
-        //Show the main game screen and initialize the grid
+        // Show the main game screen and initialize the grid
         view.buildGrid();
         view.buildTopPanel();
         view.setBestScore(model.getBestScore());
@@ -45,9 +45,10 @@ public class Controller {
         canMakeMove = true; 
     }
 
-    public void onKeyPressed(KeyEvent e) {
-        
-        Direction dir = null;
+    public void onKeyPressed(KeyEvent e) { 
+        Direction dir;
+
+        // Translate arrow key to direction
         switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT:
                 dir = Direction.LEFT;
@@ -62,9 +63,11 @@ public class Controller {
                 dir = Direction.DOWN;
                 break;
             default:
+                dir = null;
                 break;
         }
 
+        // Makes a move if possible
         if (dir != null && canMakeMove) {
             handleMove(dir);
         }
@@ -79,12 +82,12 @@ public class Controller {
             return;
         }
 
+        // Show the move in the view
         view.implementMoves(movePlan);
     }
 
     public void applyMoveAfterAnimation(MovePlan movePlan) {
         model.applyMove(movePlan);
-        view.repaint();
         view.setScore(model.getScore());
         checkGameOver();
         canMakeMove = true;
@@ -93,8 +96,12 @@ public class Controller {
     public void checkGameOver() {
         if (!model.canMove()) {
             canMakeMove = false;
+
+            // Record the user's best score
             model.setBestScore();
             view.setBestScore(model.getBestScore());
+            
+            // Show the end screen
             view.removeAll();
             view.revalidate();
             view.repaint();

@@ -1,37 +1,25 @@
 package Model;
 
+/**
+ * Represents a single tile.
+ */
 public class Tile {
-    public int value; //0 means empty
+    public int value;
     public String id; 
-    public boolean merged; //to check if the tile is merged or no
+    public boolean merged;
 
-    //constructor
     public Tile(String id) {
         this.value = 0; 
         this.id = id;
-        this.merged = false; //initially tiles are not merged
+        this.merged = false;
     }
 
-    //to check if the tile is empty or not
-    boolean isEmpty() {
-        return value == 0;
-    }
-
-    //to reset the tile to an empty state
-    void reset() {
-        value = 0;
-        merged = false;
-    }
-
-    //to set a new value
-    void setValue(int newValue) {
-        this.value = newValue;
-
-    }
-
-    //to return the current value
     public int getValue() {
         return value;
+    }
+
+    void setValue(int value) {
+        this.value = value;
     }
 
     String getId() {
@@ -46,9 +34,12 @@ public class Tile {
         this.merged = merged;
     }
 
+    boolean isEmpty() {
+        return value == 0;
+    }
 
+    void reset() {
+        value = 0;
+        merged = false;
+    }
 }
-
-
-    
-

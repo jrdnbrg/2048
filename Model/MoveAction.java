@@ -1,6 +1,5 @@
 package Model;
 
-
 /**
  * Represents a single movement.
  */
@@ -12,18 +11,7 @@ public class MoveAction {
     private int oldValue;
     private int newValue;
     private String type; // "slide" or "merge" or "spawn"
-    // private int tileId
 
-    /**
-     * Constructor.
-     * @param startRow of tile
-     * @param startCol of tile
-     * @param endRow of tile
-     * @param endCol of tile
-     * @param oldValue of tile
-     * @param newValue of tile
-     * @param type of move
-     */
     public MoveAction(int startRow, int startCol, int endRow, int endCol, int oldValue, int newValue, String type) {
         this.startRow = startRow;
         this.startCol = startCol;
@@ -76,19 +64,4 @@ public class MoveAction {
         }
         return true;
     }
-
-    // For testing purposes
-    @Override
-    public String toString() {
-        String str = "";
-        str += "startRow: " + startRow + "\n";
-        str += "startCol: " + startCol + "\n";
-        str += "endRow: " + endRow + "\n";
-        str += "endCol: " + endCol + "\n";
-        str += "oldValue: " + oldValue + "\n";
-        str += "newValue: " + newValue + "\n";
-        str += "type: " + type + "\n\n";
-        return str;
-    }
-
 }

@@ -18,7 +18,7 @@ FEATURES (more info on how to demo each feature in Product Backlog.pdf)
     Restart game
 
 ADVANCED TOPIC 1: VERSION CONTROL
-    We learned version control by using git and github.
+    We learned version control by using git and GitHub.
     At the beginning we had some problems, but after using it the whole project we are now very comfortable using it.
 
 ADVANCED TOPIC 2: USER EXPERIENCE

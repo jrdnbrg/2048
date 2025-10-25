@@ -1,6 +1,6 @@
 package Model;
 
-import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Represents the plan for one move.
@@ -11,10 +11,6 @@ public class MovePlan {
     private boolean changed;
     private Direction dir;
 
-    /**
-     * Constructor.
-     * @param dir of pressed arrow key
-     */
     public MovePlan(Direction dir) {
         actions = new ArrayList<MoveAction>();
         scoreGained = 0;
@@ -48,16 +44,5 @@ public class MovePlan {
 
     public void addScore(int value) {
         scoreGained += value;
-    }
-
-    // For testing purposes
-    @Override
-    public String toString() {
-        String str = "";
-        for (MoveAction action : actions) {
-            str += "Moveaction: \n\n";
-            str += action.toString();
-        }
-        return str;
     }
 }
